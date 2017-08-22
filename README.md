@@ -9,3 +9,4 @@
  indentify |  | Retrieves the computer information.
  system | {CMD} | Executes cmd command
  send_file | {SLAVE_PATH}; {MASTER_PATH} | Sends file
+ get_file | {SLAVE_PATH}; {MASTER_PATH} | Receivies file
