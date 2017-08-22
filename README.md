@@ -3,7 +3,7 @@
  - The language is C using MinGW
  - You can fix bugs and modify as much as you want, and I am learning C for quite a time and wanted to share my program.
  
- First Header | Second Header | Description
+ Command | Arguments| Description
 ------------ | ------------- | -----------
 Content from cell 1 | Content from cell 2
 send_file | S_PATH; M_PATH | Sends file
