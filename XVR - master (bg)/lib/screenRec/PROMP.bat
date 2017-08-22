@@ -1,3 +1,0 @@
-title CMD
-cls
-cmd
