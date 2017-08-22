@@ -35,7 +35,7 @@ int net_cmd_System(char* msg, int msgLen, SOCKET sock)
 			break;
 		}
 	
-		LOG(LOG_INFO, "%s", rmsg);
+		printf("%s", rmsg);
 	}
 
 	free(rmsg);

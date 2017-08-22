@@ -48,6 +48,8 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 	if(!arg)
 	{
 		LOG(LOG_ERR, "Not enough arguments!\n");
+
+		return 1;
 	}
 
 	CreateThread(NULL, 0, sm_recvCountFunc, NULL, 0, NULL);

@@ -48,6 +48,8 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 	if(!arg)
 	{
 		LOG(LOG_ERR, "Недостатачно аргументи!\n");
+
+		return 1;
 	}
 
 	CreateThread(NULL, 0, sm_recvCountFunc, NULL, 0, NULL);
@@ -149,7 +151,7 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 					LOG(LOG_ERR, "Прекъсна трансфера на файла!\n");
 					sm_recvCountLoop = 0;
 
-					return 1;
+					return -1;
 				}
 
 				tries++;
