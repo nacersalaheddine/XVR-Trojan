@@ -16,12 +16,13 @@
  terminate |  | Stops the slave |
  exit |  | Stops the master |
 
-#Subcommands
+# Subcommands
  - get_file
- Commands | Description
- -------- | -----------
- screenshot_small | Screenshot 30%
- screenshot_half | Screenshot 50%
- screenshot_full | Screenshot
- keylogger_path | Keylogger path
+ 
+Commands | Description
+-------- | -----------
+screenshot_small | Screenshot 30%
+screenshot_half | Screenshot 50%
+screenshot_full | Screenshot
+keylogger_path | Keylogger path
   
