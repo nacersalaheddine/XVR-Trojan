@@ -5,7 +5,7 @@
  
  Commands | Arguments| Description
  -------- | -------- | -----------
+  send_file | S_PATH; M_PATH | Sends file
  echo | MSG | Echo 
  indentify |  | Retrieves the computer information. Computer name, username, screen width, screen height
  system | CMD | Executes cmd command
- send_file | S_PATH; M_PATH | Sends file
