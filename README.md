@@ -3,10 +3,10 @@
  - The language is C using MinGW
  - You can fix bugs and modify as much as you want, and I am learning C for quite a time and wanted to share my program.
  
- Commands | Arguments | Description
- -------- | --------- | -----------
- echo | {MSG} | Echo 
- indentify |  | Retrieves the computer information.
- system | {CMD} | Executes cmd command
- send_file | {SLAVE_PATH}; {MASTER_PATH} | Sends file
- get_file | {SLAVE_PATH}; {MASTER_PATH} | Receivies file
+ Commands | Arguments | Description | Example
+ -------- | --------- | ----------- | -------
+ echo | {MSG} | Echo | echo Hello
+ indentify |  | Retrieves the computer information. |
+ system | {CMD} | Executes cmd command | system ipconfig
+ send_file | {SLAVE_PATH}; {MASTER_PATH} | Sends file | send_file C:\fs; D:\fm
+ get_file | {SLAVE_PATH}; {MASTER_PATH} | Receivies file | get_file C:\fs; D:\fm
