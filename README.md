@@ -18,4 +18,10 @@
 
 #Subcommands
  - get_file
-  1. test
+   Commands | Description
+   -------- | -----------
+   screenshot_small | Screenshot 30%
+   screenshot_half | Screenshot 50%
+   screenshot_full | Screenshot
+   keylogger_path | Keylogger path
+  
