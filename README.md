@@ -13,3 +13,5 @@
  msci_sound | {CMD} | MSCI command | msci_sound play f.mp3 from 0
  keylog_clear |  | Clears keylogger data | 
  mbox | {TITLE}; {MSG}; {TYPE} | Message box | mbox TITLE; Msg; ERROR
+ terminate |  | Stops the slave |
+ exit |  | Stops the master |
