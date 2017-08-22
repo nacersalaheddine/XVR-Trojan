@@ -24,3 +24,8 @@
    - keylogger_path - Keylogger path
     
  - mbox
+   - ERROR
+   - QUESTION
+   - WARNING
+   - INFO
+   - Otherwise will be plain	
