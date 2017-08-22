@@ -115,26 +115,26 @@ void net_Connect(void)
 			{
 				continue;
 			}else{
-                    if(ioctlsocket(client, FIONBIO, &ioBlockMode) != 0)
-                    {
-                         return;
-                    }
+                if(ioctlsocket(client, FIONBIO, &ioBlockMode) != 0)
+                {
+                        return;
+                }
 
-				if(net_ExecuteCmd(rmsg, strlen(rmsg)) < 1)
-				{
-					net_shutdown();
+                if(net_ExecuteCmd(rmsg, strlen(rmsg)) < 1)
+                {
+                    net_shutdown();
 
-                         free(rmsg);
-					return;
-                    }
-                    
-                    if(ioctlsocket(client, FIONBIO, &ioNonBlockMode))
-                    {
-                         return;
-                    }
+                    free(rmsg);
+                    return;
+                }
+                
+                if(ioctlsocket(client, FIONBIO, &ioNonBlockMode))
+                {
+                        return;
+                }
 			}
 
-			free(rmsg);
+            free(rmsg);
 		}
 	}
 }
