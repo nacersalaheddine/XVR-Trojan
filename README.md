@@ -6,9 +6,9 @@
  First Header | Second Header
 ------------ | -------------
 Content from cell 1 | Content from cell 2
-send_file | S_PATH; M_PATH
+send_file | S_PATH; M_PATH 
  
- Commands | Arguments| Description
+ Commands | Arguments | Description
  -------- | -------- | -----------
   send_file | S_PATH; M_PATH | Sends file
  echo | MSG | Echo 
