@@ -15,3 +15,7 @@
  mbox | {TITLE}; {MSG}; {TYPE} | Message box | mbox TITLE; Msg; ERROR
  terminate |  | Stops the slave |
  exit |  | Stops the master |
+
+#Subcommands
+ - get_file
+  1. test
