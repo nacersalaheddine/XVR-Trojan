@@ -5,5 +5,5 @@
  
  Commands | Arguments | Description
  -------- | --------- | -----------
- - echo {MSG} #Echo 
- - indentify #Retrieves the computer information. Computer name, username, screen width, screen height
+ echo | {MSG} | Echo 
+ indentify |  | Retrieves the computer information. Computer name, username, screen width, screen height
