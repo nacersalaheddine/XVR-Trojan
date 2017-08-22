@@ -117,7 +117,7 @@ void net_Connect(void)
 			}else{
                 if(ioctlsocket(client, FIONBIO, &ioBlockMode) != 0)
                 {
-                        return;
+					return;
                 }
 
                 if(net_ExecuteCmd(rmsg, strlen(rmsg)) < 1)
@@ -130,11 +130,11 @@ void net_Connect(void)
                 
                 if(ioctlsocket(client, FIONBIO, &ioNonBlockMode))
                 {
-                        return;
+					return;
                 }
 			}
 
-            free(rmsg);
+			free(rmsg);
 		}
 	}
 }
