@@ -4,4 +4,5 @@
  - You can fix bugs and modify as much as you want, and I am learning C for quite a time and wanted to share my program.
  
 # Console commands:
- Command | Arguments | Description
+   Command | Arguments | Description
+ - echo    | {MSG}     | Echo
