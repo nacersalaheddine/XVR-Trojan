@@ -1,5 +1,5 @@
 ARGS= -Wall -DNDEBUG -lws2_32 -lgdi32
-O_PATH= bin/PROG-ENG.exe
+O_PATH= bin/PROG-BG.exe
 SRC= $(wildcard source/*.c)
 SRC_CMD= $(wildcard source/cmd/*.c) $(wildcard source/sc/*.c)
 INCL_PATH= include

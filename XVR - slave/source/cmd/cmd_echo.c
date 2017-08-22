@@ -8,7 +8,7 @@
 
 int net_cmd_Echo(char* msg, int msgLen)
 {
-	if(net_SendData(NULL, msg, msgLen) < 1)
+	if(net_SendData(msg, msgLen) < 1)
 	{
 		return -1;
 	}

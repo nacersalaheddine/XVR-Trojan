@@ -48,8 +48,6 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 	if(!arg)
 	{
 		LOG(LOG_ERR, "Not enough arguments!\n");
-
-		return 1;
 	}
 
 	CreateThread(NULL, 0, sm_recvCountFunc, NULL, 0, NULL);
@@ -84,7 +82,7 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 	{
 		if(net_ReciveData(sock, &rmsg) < 1)
 		{
-			if(tries == NET_PROTECT_CPU_TRIES * 2)
+			if(tries == NET_PROTECT_CPU_TRIES)
 			{
 				LOG(LOG_ERR, "We didn't receive back answer!\n");
 				free(rmsg);
@@ -95,7 +93,6 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 			}
 
 			tries++;
-			NET_TRYING_SLEEP();
 		}else{
 			break;
 		}
@@ -115,7 +112,7 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 	{
 		if(net_ReciveData(sock, &rmsg) < 1)
 		{
-			if(tries == NET_PROTECT_CPU_TRIES * 2)
+			if(tries == NET_PROTECT_CPU_TRIES)
 			{
 				LOG(LOG_ERR, "We didn't receive back answer!\n");
 				free(rmsg);
@@ -126,7 +123,6 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 			}
 
 			tries++;
-			NET_TRYING_SLEEP();
 		}else{
 			sm_totalSize = ((rmsg[0] & 0xFF) << 24) | ((rmsg[1] & 0xFF) << 16) | ((rmsg[2] & 0xFF) << 8) | (rmsg[3] & 0xFF);
 			break;
@@ -155,7 +151,6 @@ int net_cmd_SM(char* msg, int msgLen, SOCKET sock)
 				}
 
 				tries++;
-				NET_TRYING_SLEEP();
 			}else{
 				break;
 			}

@@ -18,23 +18,35 @@ int net_cmd_System(char* msg, int msgLen, SOCKET sock)
 		return -2;
 	}
 
+	int tries = 0;
 	char* rmsg;
 
 	while(1)
 	{		
-		if(net_ReciveData(sock, &rmsg) < 1)
+		while(1)
 		{
-			LOG(LOG_ERR, "We didn't receive back answer!\n");
-			free(rmsg);
+			if(net_ReciveData(sock, &rmsg) < 1)
+			{
+				if(tries == NET_PROTECT_CPU_TRIES)
+				{
+					LOG(LOG_ERR, "We didn't receive back answer!\n");
+					free(rmsg);
 
-			return 1;
+					return 1;
+				}
+
+				tries++;
+			}else{
+				tries = 0;
+				break;
+			}
 		}
 
 		if(rmsg[0] == NET_CMD_SYSTEM)
 		{
 			break;
 		}
-	
+
 		printf("%s", rmsg);
 	}
 

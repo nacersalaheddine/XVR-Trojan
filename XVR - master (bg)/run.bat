@@ -1,1 +1,1 @@
-powershell .\bin\PROG-ENG.exe -PS
+powershell .\bin\PROG-BG.exe -PS

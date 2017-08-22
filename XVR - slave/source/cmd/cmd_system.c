@@ -13,7 +13,7 @@ int net_cmd_System(char* msg, int msgLen)
 
 	while(fgets(buff, sizeof(buff), f) != 0) 
 	{
-		if(net_SendData(NULL, buff, strlen(buff)) < 1)
+		if(net_SendData(buff, strlen(buff)) < 1)
 		{
 			return -1;
 		}		
@@ -24,10 +24,10 @@ int net_cmd_System(char* msg, int msgLen)
 	memset(buff, 0, 256);
 	buff[0] = NET_CMD_SYSTEM;
 
-	if(net_SendData(NULL, buff, 1) < 1)
+	if(net_SendData(buff, 2) < 1)
 	{
 		return -1;
-	}	
+	}
 
 	return 1;
 }

