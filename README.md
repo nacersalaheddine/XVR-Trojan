@@ -3,9 +3,9 @@
  - The language is C using MinGW
  - You can fix bugs and modify as much as you want, and I am learning C for quite a time and wanted to share my program.
  
- Commands | Arguments    | Description
- -------- | ------------ | -----------
- echo | {MSG} | Echo 
+ Commands | Arguments| Description
+ -------- | -------- | -----------
+ echo | MSG | Echo 
  indentify |  | Retrieves the computer information. Computer name, username, screen width, screen height
- system | {CMD} | Executes cmd command
- send_file | {S_PATH}; {M_PATH} | Sends file
+ system | CMD | Executes cmd command
+ send_file | S_PATH; M_PATH | Sends file
