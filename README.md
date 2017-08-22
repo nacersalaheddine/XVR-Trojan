@@ -18,10 +18,9 @@
 
 # Subcommands
  - get_file
- 
-   1. screenshot_small - Screenshot 30%
-   2. screenshot_half - Screenshot 50%
-   3. screenshot_full - Screenshot
-   4. keylogger_path - Keylogger path
+   - screenshot_small - Screenshot 30%
+   - screenshot_half - Screenshot 50%
+   - screenshot_full - Screenshot
+   - keylogger_path - Keylogger path
     
  - mbox
