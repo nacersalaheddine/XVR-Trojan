@@ -5,4 +5,4 @@
  
 # Console commands:
    Command | Arguments | Description
- - echo    | {MSG}     | Echo
+ - echo    | {MSG}     | Echo 
