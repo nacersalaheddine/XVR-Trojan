@@ -5,7 +5,7 @@
  
  Commands | Arguments | Description
  -------- | --------- | -----------
-  send_file | S_PATH; M_PATH | Sends file
- echo | MSG | Echo 
+ echo | {MSG} | Echo 
  indentify |  | Retrieves the computer information.
- system | CMD | Executes cmd command
+ system | {CMD} | Executes cmd command
+ send_file | {SLAVE_PATH}; {MASTER_PATH} | Sends file
