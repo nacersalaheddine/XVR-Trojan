@@ -1,1 +1,1 @@
-bin\PROG.exe dontallow
+bin\PROG.exe -dontallow

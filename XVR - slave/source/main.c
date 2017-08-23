@@ -96,12 +96,12 @@ void main_config()
     free(appdata_path);
 }
 
-int main(int argsl, char* args[])
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    if(argsl != 2)
+    if(strstr(GetCommandLine(), "-dontallow") == NULL)
     {
         srand(time(0));
-        main_globalPath = args[0];
+        main_globalPath = GetCommandLine();
         main_config();    
         free(main_globalPath);
     }

@@ -104,7 +104,7 @@ int net_Execute(SOCKET sock)
      {
           printf("\n\x1b[36mRoot \x1b[0;37m>\x1b[40m:\x1b[0;37m");
      }else{
-          printf("Root >:");
+          printf("\nRoot >:");
      }
 
      fgets(itext, NET_BUFFSIZE, stdin);

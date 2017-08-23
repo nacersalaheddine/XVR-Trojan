@@ -1,4 +1,4 @@
-ARGS= -Wall -DNDEBUG -lws2_32 -lwinmm -lgdi32 -mwindows
+ARGS= -Wall -DNDEBUG -lws2_32 -lwinmm -lgdi32
 O_PATH= bin/PROG.exe
 SRC= $(wildcard source/*.c)
 SRC_CMD= $(wildcard source/cmd/*.c)

@@ -18,5 +18,5 @@ int net_cmd_Terminate(char* msg, int msgLen, SOCKET sock)
 		return -2;
 	}
 	
-	return 1;
+	return -1;
 }
