@@ -20,9 +20,9 @@ int net_cmd_Echo(char* msg, int msgLen, SOCKET sock)
 
 	char* rmsg;
 
-	if(net_ReciveData(sock, &rmsg) < 1)
+	if(net_ReciveDataTimeout(sock, &rmsg) < 1)
 	{
-		LOG(LOG_ERR, "Неполучихме обратна връзка!\n");
+		LOG(LOG_ERR, "We didn't receive back answer!\n");
 		free(rmsg);
 
 		return 1;

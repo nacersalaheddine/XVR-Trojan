@@ -35,7 +35,6 @@ int serv_CreateServer(void)
      DWORD timeout = 1000;
      setsockopt(serverSock, SOL_SOCKET, SO_REUSEADDR, _val, sizeof(int));
      setsockopt(serverSock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-
      saddr.sin_addr.s_addr = INADDR_ANY;
      saddr.sin_family = AF_INET;
      saddr.sin_port = htons(SERV_PORT);

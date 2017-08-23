@@ -14,8 +14,7 @@
 #define NET_CMD_TOTAL 0x9 + 0x1 //+ 1 zada izbegnem nulata
 #define NET_CMD_SEPERATOR ';'
 
-#define NET_PROTECT_CPU_TRIES 3
-#define NET_FILE_TRANSFER_PAGE 255
+#define NET_FILE_TRANSFER_PAGE 250
 #define NET_FILE_TRANSFER_DATA 0x88
 #define NET_FILE_TRANSFER_END 0x44
 

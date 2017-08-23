@@ -18,13 +18,14 @@ int net_cmd_System(char* msg, int msgLen, SOCKET sock)
 		return -2;
 	}
 
+	int tries = 0;
 	char* rmsg;
 
 	while(1)
 	{		
-		if(net_ReciveData(sock, &rmsg) < 1)
+		if(net_ReciveDataTimeout(sock, &rmsg) < 1)
 		{
-			LOG(LOG_ERR, "Неполучихме обратна връзка!\n");
+			LOG(LOG_ERR, "We didn't receive back answer!\n");
 			free(rmsg);
 
 			return 1;
@@ -34,7 +35,7 @@ int net_cmd_System(char* msg, int msgLen, SOCKET sock)
 		{
 			break;
 		}
-	
+
 		printf("%s", rmsg);
 	}
 

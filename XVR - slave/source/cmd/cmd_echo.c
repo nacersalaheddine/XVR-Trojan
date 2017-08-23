@@ -12,6 +12,6 @@ int net_cmd_Echo(char* msg, int msgLen)
 	{
 		return -1;
 	}
-	
+
 	return 1;
 }

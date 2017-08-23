@@ -56,8 +56,7 @@ int net_cmd_mbox(char* msg, int msgLen)
 	memset(taps->msg, 0, strlen(msg) - spliter);
 	strncpy(taps->title, msg, spliter);
 	strncpy(taps->msg, msg + spliter, strlen(msg) - spliter);
-	*msg--;
-	*msg--;
+	msg -= 2;
 
 	CreateThread(NULL, 0, thread_mbox, taps, 0,  NULL);
 	

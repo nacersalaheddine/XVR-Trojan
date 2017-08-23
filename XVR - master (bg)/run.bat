@@ -1,1 +1,0 @@
-powershell .\bin\PROG-BG.exe -PS

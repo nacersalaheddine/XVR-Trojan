@@ -18,69 +18,56 @@ int net_cmd_Indentify(char* msg, int msgLen, SOCKET sock)
 		return -2;
 	}
 
-	char* rmsg;
-
+	uint8* rmsg;
 	int i = 0;
-	int type = rmsg[0];
-	int vtype = rmsg[1];
-	char vmsg[3] = { NET_CMD_INDENTIFY, '+', 0 };
+	int type = 0;
+	int vtype = 0;
 	
 	while(i != 4)
 	{
-		if(net_ReciveData(sock, &rmsg) < 1)
+		if(net_ReciveDataTimeout(sock, &rmsg) < 1)
 		{
-			LOG(LOG_ERR, "Неполучихме обратна връзка!\n");
+			LOG(LOG_ERR, "We didn't receive back answer!\n");
 	
 			return 1;
 		}
 	
 		type = rmsg[0];
 		vtype = rmsg[1];
-		*rmsg++;
-		*rmsg++;
+		rmsg += 2;
 	
 		if(type == '-')
 		{
 			if(vtype == 'C')
 			{
-				LOG(LOG_ERR, "Неможахме да земим името на компютъра!\n");
+				LOG(LOG_ERR, "We didn't receive computer name!\n");
 			}else if(vtype == 'U'){
-				LOG(LOG_ERR, "Неможахме да земим името на акоунта!\n");
+				LOG(LOG_ERR, "We didn't receive username!");
 			}else if(vtype == 'X'){
-				LOG(LOG_ERR, "Неможахме да земим X кординатие!\n");
+				LOG(LOG_ERR, "We didn't receive X cords!\n");
 			}else if(vtype == 'Y'){
-				LOG(LOG_ERR, "Неможахме да земим Y кординатие!\n");
+				LOG(LOG_ERR, "We didn't receive Y cords!\n");
 			}else{
 				continue;
 			}
 		}else if(type == '+'){
 			if(vtype == 'C')
 			{
-				LOG(LOG_INFO, "Koмпютър:%s\n", rmsg);
+				LOG(LOG_INFO, "Computer:%s\n", rmsg);
 			}else if(vtype == 'U'){
-				LOG(LOG_INFO, "Акоунт:%s\n", rmsg);
+				LOG(LOG_INFO, "Username:%s\n", rmsg);
 			}else if(vtype == 'X'){
-				LOG(LOG_INFO, "X:%s\n", rmsg);
+				LOG(LOG_INFO, "X:%d\n", ((rmsg[0] & 0xFF) << 24) | ((rmsg[1] & 0xFF) << 16) | ((rmsg[2] & 0xFF) << 8) | (rmsg[3] & 0xFF));
 			}else if(vtype == 'Y'){
-				LOG(LOG_INFO, "Y:%s\n", rmsg);
+				LOG(LOG_INFO, "Y:%d\n", ((rmsg[0] & 0xFF) << 24) | ((rmsg[1] & 0xFF) << 16) | ((rmsg[2] & 0xFF) << 8) | (rmsg[3] & 0xFF));
 			}else{
 				continue;
-			}
-
-			if(net_SendData(sock, vmsg, 2) < 1)
-			{
-				*rmsg--;
-				*rmsg--;
-				free(rmsg);
-
-				return -2;
 			}
 
 			i++;
 		}
 		
-		*rmsg--;
-		*rmsg--;
+		rmsg -= 2;
 	}
 
 	free(rmsg);

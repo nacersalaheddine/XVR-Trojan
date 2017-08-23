@@ -30,31 +30,17 @@ int net_cmd_MS(char* msg, int msgLen)
 		}
 	}
 
-	int tries = 0;
 	int rmsgSize = 0;
 	uint8* rmsg;
-	ermsg[1] = '+';
-	
+
 	while(1)
 	{
-		tries = 0;
-
-		while(1)
+		if(net_ReciveDataTimeout(&rmsg) < 1)
 		{
-			if(net_ReciveData(&rmsg) < 1)
-			{
-				if(tries == NET_PROTECT_CPU_TRIES)
-				{
-					free(rmsg);
-					fclose(f);
+			free(rmsg);
+			fclose(f);
 
-					return 1;
-				}
-
-				tries++;
-			}else{
-				break;
-			}
+			return 1;
 		}
 
 		if(rmsg[0] != NET_FILE_TRANSFER_DATA || rmsg[0] == NET_FILE_TRANSFER_END)
@@ -64,12 +50,9 @@ int net_cmd_MS(char* msg, int msgLen)
 
 			break;
 		}
-		
-		rmsgSize = rmsg[1];
-		*rmsg++;
-		*rmsg++;
 
-		fwrite(rmsg, 1, rmsgSize, f);
+		rmsgSize = rmsg[1];
+		fwrite(rmsg + 2, 1, rmsgSize, f);
 
 		if(net_SendData(ermsg, 3) < 1)
 		{
@@ -77,10 +60,7 @@ int net_cmd_MS(char* msg, int msgLen)
 			fclose(f);
 
 			return -1;
-		}
-
-		*rmsg--;
-		*rmsg--;
+		}	
 	}
 
 	free(rmsg);
