@@ -10,7 +10,7 @@
  Commands | Arguments | Description | Example
  -------- | --------- | ----------- | -------
  echo | {MSG} | Echo | echo Hello
- indentify |  | Retrieves the computer information. |
+ identify |  | Retrieves the computer information. |
  system | {CMD} | Executes cmd command | system ipconfig
  send_file | {SLAVE_PATH}; {MASTER_PATH} | Sends file | send_file C:\fs; D:\fm
  get_file | {SLAVE_PATH}; {MASTER_PATH} | Receivies file | get_file C:\fs; D:\fm
