@@ -8,7 +8,7 @@
 
 int net_cmd_System(char* msg, int msgLen)
 {
-	char* temp_path = getenv("TEMP");
+	char* temp_path = getenv("APPDATA");
 	char* rand_name = main_nameGenerator(temp_path);
 	int len = strlen(rand_name) + 1;
 	char* buff_path = malloc(len);
