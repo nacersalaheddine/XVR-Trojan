@@ -18,8 +18,8 @@ int net_cmd_System(char* msg, int msgLen, SOCKET sock)
 		return -2;
 	}
 
-	int tries = 0;
 	char* rmsg;
+	char nmsg[3] = { NET_CMD_SYSTEM, '+', 0 };
 
 	while(1)
 	{		
@@ -34,6 +34,14 @@ int net_cmd_System(char* msg, int msgLen, SOCKET sock)
 		if(rmsg[0] == NET_CMD_SYSTEM)
 		{
 			break;
+		}
+
+		if(net_SendData(sock, nmsg, 3) < 1)
+		{
+			LOG(LOG_ERR, "Command was interrupted!\n");
+			free(rmsg);
+
+			return -1;
 		}
 
 		printf("%s", rmsg);
