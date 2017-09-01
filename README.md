@@ -14,25 +14,15 @@
  system | {CMD} | Executes cmd command | system ipconfig
  send_file | {SLAVE_PATH}; {MASTER_PATH} | Sends file | send_file C:\fs; D:\fm
  get_file | {SLAVE_PATH}; {MASTER_PATH} | Receivies file | get_file C:\fs; D:\fm
- msci_sound | {CMD} | MSCI command | msci_sound play f.mp3 from 0
  keylog_clear |  | Clears keylogger data | 
- mbox | {TITLE}; {MSG}; {TYPE} | Message box | mbox TITLE; Msg; ERROR
  terminate |  | Stops the slave |
  exit |  | Stops the master |
 
-# Subcommands
- - get_file
+# get_file subcommand
    - screenshot_small - Screenshot 30%
    - screenshot_half - Screenshot 50%
    - screenshot_full - Screenshot
    - keylogger_path - Keylogger path
-    
- - mbox
-   - ERROR
-   - QUESTION
-   - WARNING
-   - INFO
-   - Otherwise will be plain	
 
 # Note
- - Screenshots are saved as .ppm I use XnView
+ - Screenshots are saved as .ppm I use XnView to view them

