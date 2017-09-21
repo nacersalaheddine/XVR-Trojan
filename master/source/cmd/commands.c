@@ -126,7 +126,7 @@ int commands_find(char* msg)
 	{
 		commands_printHelp();
 
-		return COMMANDS_SUCC;
+		return COMMANDS_DONT_SEEDUP;
 	}else if(strcmp(msg, "stop") == 0){
 		server_CloseConnection();
 

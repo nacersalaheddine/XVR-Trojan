@@ -19,6 +19,7 @@
 #define COMMANDS_ARGS_SEP ','
 #define COMMANDS_UNKNOW_COMMAND -9
 #define COMMANDS_SUCC 1
+#define COMMANDS_DONT_SEEDUP 2
 
 extern int commands_Translate(char* msg);
 extern int commands_ExportArg(char** msg, char** arg, int startIndex);
