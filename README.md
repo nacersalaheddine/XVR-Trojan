@@ -7,14 +7,15 @@
  
  ![Alt text](image.png?raw=true "Title")
  
-# Note
- - Type help for list of commands
- - The SCL and SCL SeedUp key must be between 1 and max of unsigned long
- - functions that can do
+ # functions that can do
  - screenshots
  - retrive file
  - send file
  - hidden CMD execution
  - keylogger
  - whitelist
- - and some not so usefull
+ - and some not so usefull, use help for list of all commands
+
+# Note
+ - The SCL and SCL SeedUp key must be between 1 and max of unsigned long
+ - Screenshots are saved as 24 bit BMP 
