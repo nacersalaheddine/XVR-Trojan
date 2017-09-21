@@ -1,1 +1,0 @@
-bin\PROG.exe -dontallow
