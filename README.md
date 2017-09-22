@@ -18,4 +18,5 @@
 
 # Note
  - The SCL and SCL SeedUp key must be between 1 and max of unsigned long
- - Screenshots are saved as 24 bit BMP 
+ - Screenshots are saved as 24 bit BMP
+ - Keylogger data file open it with notepad++ to see everything
