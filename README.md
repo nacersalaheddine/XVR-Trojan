@@ -18,5 +18,6 @@
 
 # Note
  - The SCL and SCL SeedUp key must be between 1 and max of unsigned long
- - Screenshots are saved as 24 bit BMP, may not work if the video drivers are very old
+ - Screenshots are saved as 24 bit BMP
+ - You might not take a screenshot if video card is very old or it runs windows 7 and below
  - Keylogger data file open it with notepad++ to see everything
