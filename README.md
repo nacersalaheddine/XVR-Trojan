@@ -1,7 +1,7 @@
 # XVR Trojan
  - For colorfull output use argument -Color
  - For time showing use -Time
- - Runs on windows and it was tested on windows 10
+ - Runs on windows and it was tested on windows 10 and windows 7
  - The language is C using MinGW with the help of dr memory
  - You can fix bugs. modify as much as you want and do what you wan't with it
  
