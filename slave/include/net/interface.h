@@ -8,6 +8,6 @@
 extern int net_SendData(unsigned char* msg, int len);
 extern int net_SendCmd(unsigned char* msg, int len, int cmd);
 extern int net_ReceiveData(unsigned char** msg);
-extern int net_ReceiveDataTimeout(OUT_USTRP msg, int tries);
+extern int net_ReceiveDataTimeout(unsigned char** msg, int tries);
 
 #endif
