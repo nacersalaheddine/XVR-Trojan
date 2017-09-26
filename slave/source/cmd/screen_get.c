@@ -50,15 +50,15 @@ int command_Screen_Get(uint8* msg)
 
 	uint32 i;
 	uint32 bufferIndex = 0;
-	uint8 buffer[NET_BUFFSIE_FOR_FILE];
-	memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+	uint8 buffer[NET_BUFFSIE_MAX_CONTENT];
+	memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 	uint8 *rmsg;
 
 	for(i = 0; i != size; i++)
 	{
-		if(bufferIndex >= NET_BUFFSIE_FOR_FILE)
+		if(bufferIndex >= NET_BUFFSIE_MAX_CONTENT)
 		{
-			if(net_SendCmd(buffer, NET_BUFFSIE_FOR_FILE, COMMAND_SCREEN_GET_DATA) == NET_LOST_CONNECTION)
+			if(net_SendCmd(buffer, NET_BUFFSIE_MAX_CONTENT, COMMAND_SCREEN_GET_DATA) == NET_LOST_CONNECTION)
 			{
 				free(screenData);
 
@@ -74,7 +74,7 @@ int command_Screen_Get(uint8* msg)
 			}
 
 			free(rmsg);
-			memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+			memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 			bufferIndex = 0;
 		}
 
@@ -83,9 +83,9 @@ int command_Screen_Get(uint8* msg)
 
 	free(screenData);
 
-	if(bufferIndex != 0 && bufferIndex <= NET_BUFFSIE_FOR_FILE)
+	if(bufferIndex != 0 && bufferIndex <= NET_BUFFSIE_MAX_CONTENT)
 	{
-		if(net_SendCmd(buffer, NET_BUFFSIE_FOR_FILE, COMMAND_SCREEN_GET_DATA) == NET_LOST_CONNECTION)
+		if(net_SendCmd(buffer, bufferIndex, COMMAND_SCREEN_GET_DATA) == NET_LOST_CONNECTION)
 		{
 			return NET_LOST_CONNECTION;
 		}
@@ -98,7 +98,7 @@ int command_Screen_Get(uint8* msg)
 		}
 
 		free(rmsg);
-		memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+		memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 		bufferIndex = 0;
 	}
 

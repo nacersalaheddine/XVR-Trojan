@@ -8,7 +8,7 @@
 
 int command_Send(char* msg, int len)
 {
-	if(strlen(msg) >= NET_BUFFSIE_FOR_FILE)
+	if(strlen(msg) >= NET_BUFFSIE_MAX_CONTENT)
 	{
 		LOG(LOG_ERR, "To big message!\n");
 		free(msg);

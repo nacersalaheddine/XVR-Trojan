@@ -29,8 +29,9 @@ int net_SendData(uint8* msg, int len)
 {
 	uint8* _msg = malloc(NET_BUFFSIZE);
 	memset(_msg, 0, NET_BUFFSIZE);
-	memmove(_msg + 1, msg, len);
-	_msg[0] = len;
+	memmove(_msg + 2, msg, len);
+	_msg[0] = len & 0xFF;
+	_msg[1] = (len >> 8) & 0xFF;
 
 	SCL_Encrypt(&_msg, NET_BUFFSIZE);
 
@@ -50,9 +51,11 @@ int net_SendCmd(uint8* msg, int len, int cmd)
 {
 	uint8* _msg = malloc(NET_BUFFSIZE);
 	memset(_msg, 0, NET_BUFFSIZE);
-	memmove(_msg + 2, msg, len);
-	_msg[0] = len + 1;
-	_msg[1] = cmd;
+	memmove(_msg + 3, msg, len);
+	len += 1;
+	_msg[0] = len & 0xFF;
+	_msg[1] = (len >> 8) & 0xFF;
+	_msg[2] = cmd;
 
 	SCL_Encrypt(&_msg, NET_BUFFSIZE);
 
@@ -85,10 +88,10 @@ int net_ReceiveData(OUT_USTRP msg)
 
 	SCL_Decrypt(&rbuff, NET_BUFFSIZE);
 
-	int len = rbuff[0];
+	int len = (rbuff[0] & 0xFF) | (rbuff[1] & 0xFF) << 8;
 	uint8* buff = malloc(len + sizeof(uint8));
-	memset(buff, 0, len + 1);
-	memmove(buff, rbuff + 1, len);
+	memset(buff, 0, len + sizeof(uint8));
+	memmove(buff, rbuff + 2, len);
 	free(rbuff);
 
 	*msg = buff;
@@ -125,10 +128,10 @@ int net_ReceiveDataTimeout(OUT_USTRP msg, int tries)
 
 	SCL_Decrypt(&rbuff, NET_BUFFSIZE);
 
-	int len = rbuff[0];
+	int len =  (rbuff[0] & 0xFF) | (rbuff[1] & 0xFF) << 8;
 	uint8* buff = malloc(len + sizeof(uint8));
-	memset(buff, 0, len + 1);
-	memmove(buff, rbuff + 1, len);
+	memset(buff, 0, len + sizeof(uint8));
+	memmove(buff, rbuff + 2, len);
 	free(rbuff);
 
 	*msg = buff;

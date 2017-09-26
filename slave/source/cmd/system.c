@@ -12,8 +12,6 @@
 #define COMMAND_SYSTEM_DATA 0x2
 #define COMMAND_SYSTEM_END 0x3
 
-//@GRESHKA: bug! doesnt' read the file in dr. memory i dont know why but it still works
-
 int command_System(uint8* msg)
 {
 	srand(time(NULL));

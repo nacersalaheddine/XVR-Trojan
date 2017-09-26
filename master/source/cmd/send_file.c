@@ -103,8 +103,8 @@ int command_Send_File(char* msg, int len)
 
 	uint32 i;
 	uint32 bufferIndex = 0;
-	uint8 buffer[NET_BUFFSIE_FOR_FILE];
-	memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+	uint8 buffer[NET_BUFFSIE_MAX_CONTENT];
+	memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 
 	progressbar_Max = size;
 	progressbar_Start();
@@ -112,9 +112,9 @@ int command_Send_File(char* msg, int len)
 
 	for(i = 0; i != size; i++)
 	{
-		if(bufferIndex >= NET_BUFFSIE_FOR_FILE)
+		if(bufferIndex >= NET_BUFFSIE_MAX_CONTENT)
 		{
-			if(net_SendCmd(buffer, NET_BUFFSIE_FOR_FILE, COMMAND_SEND_FILE_DATA) == NET_LOST_CONNECTION)
+			if(net_SendCmd(buffer, NET_BUFFSIE_MAX_CONTENT, COMMAND_SEND_FILE_DATA) == NET_LOST_CONNECTION)
 			{
 				LOG(LOG_ERR, "Failed to send!\n");
 				free(fileData);
@@ -134,7 +134,7 @@ int command_Send_File(char* msg, int len)
 			progressbar_Index += bufferIndex;
 
 			free(rmsg);
-			memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+			memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 			bufferIndex = 0;
 		}
 
@@ -143,9 +143,9 @@ int command_Send_File(char* msg, int len)
 
 	free(fileData);
 
-	if(bufferIndex != 0 && bufferIndex <= NET_BUFFSIE_FOR_FILE)
+	if(bufferIndex != 0 && bufferIndex <= NET_BUFFSIE_MAX_CONTENT)
 	{
-		if(net_SendCmd(buffer, NET_BUFFSIE_FOR_FILE, COMMAND_SEND_FILE_DATA) == NET_LOST_CONNECTION)
+		if(net_SendCmd(buffer, bufferIndex, COMMAND_SEND_FILE_DATA) == NET_LOST_CONNECTION)
 		{
 			LOG(LOG_ERR, "Failed to send!\n");
 
@@ -163,7 +163,7 @@ int command_Send_File(char* msg, int len)
 		progressbar_Index += bufferIndex;
 
 		free(rmsg);
-		memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+		memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 		bufferIndex = 0;
 	}
 

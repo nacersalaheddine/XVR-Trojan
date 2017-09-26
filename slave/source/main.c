@@ -10,7 +10,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 	srand(time(NULL));
 	
-	/* To setup in reg 
+	/* To setup in reg
 	if(reg_Setup())
 	{
 		return 0;

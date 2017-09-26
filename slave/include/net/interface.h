@@ -1,8 +1,8 @@
 #ifndef __NET_INTERFACE_H
 #define __NET_INTERFACE_H
 
-#define NET_BUFFSIE_FOR_FILE 0xFE //0xFE
-#define NET_BUFFSIZE 516
+#define NET_BUFFSIE_MAX_CONTENT 500
+#define NET_BUFFSIZE 512
 #define NET_RECV_TRIES 5
 
 extern int net_SendData(unsigned char* msg, int len);

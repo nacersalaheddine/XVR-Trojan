@@ -106,8 +106,6 @@ int command_Get_File(char* msg, int len)
 	{
 		if(rmsg[0] == COMMAND_GET_FILE_END)
 		{
-			fwrite("\0", 1, 1, f);
-
 			break;
 		}else if(rmsg[0] == COMMAND_GET_FILE_DATA){
 			fwrite(rmsg + 1, 1, rv - 1, f);

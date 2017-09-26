@@ -27,6 +27,9 @@ uint8* screenshot_Take(double mX, double mY, OUT_INT width, OUT_INT height)
 
 	if(!screenshot_backBuff)
 	{
+		*width = 0;
+		*height = 0;
+
 		return NULL;
 	}
 

@@ -38,8 +38,6 @@ int command_Send_File(uint8* msg)
 	{
 		if(rmsg[0] == COMMAND_SEND_FILE_END)
 		{
-			fwrite("\0", 1, 1, f);
-
 			break;
 		}else if(rmsg[0] == COMMAND_SEND_FILE_DATA){
 			fwrite(rmsg + 1, 1, rv - 1, f);
