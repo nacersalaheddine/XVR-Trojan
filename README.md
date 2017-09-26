@@ -1,9 +1,9 @@
 # XVR Trojan
  - For colorfull output use argument -Color
  - For time showing use -Time
- - Runs on windows and it was tested on windows 10.
+ - Runs on windows and it was tested on windows 10
  - The language is C using MinGW with the help of dr memory
- - You can fix bugs and modify as much as you want, and I am learning C for quite a time and wanted to share my program.
+ - You can fix bugs. modify as much as you want and do what you wan't with it
  
  ![Alt text](image.png?raw=true "Title")
  
@@ -18,4 +18,6 @@
 
 # Note
  - The SCL and SCL SeedUp key must be between 1 and max of unsigned long
- - Screenshots are saved as 24 bit BMP 
+ - Screenshots are saved as 24 bit BMP
+ - You might fail to take a screenshot if video card is very old or it runs windows 7 and below
+ - Keylogger data file open it with notepad++ to see everything
