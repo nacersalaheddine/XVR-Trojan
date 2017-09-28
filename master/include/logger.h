@@ -17,7 +17,12 @@
 #define LOG_COLOR_PRGS_DEFAULT 7
 #define LOG_COLOR_PRGS_HALF 8
 #define LOG_COLOR_PRGS_FULL 9
-#define LOG_COLOR_LIST_SIZE 10
+#define LOG_COLOR_LS_FILE 10
+#define LOG_COLOR_LS_FOLDER 11
+#define LOG_COLOR_LS_UNWN 12
+#define LOG_COLOR_DISK_LIST_FIXED 13
+#define LOG_COLOR_DISK_LIST_REMOVABLE 14
+#define LOG_COLOR_LIST_SIZE 15
 
 #define LOG_FLUSH() fflush(stdout)
 
@@ -25,6 +30,7 @@ extern int log_Color;
 extern int log_Time;
 extern unsigned short log_colorPalette[];
 extern void LOG_Init(void);
+extern void LOG_LoadConfing(void);
 extern void LOG(int logType, char* format, ...);
 extern void LOG_USERNAME(void);
 extern void LOG_SERVER_USERNAME(void);

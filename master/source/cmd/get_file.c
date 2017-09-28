@@ -7,6 +7,7 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "progressbar.h"
+#include "cmd/hdd/path.h"
 
 #define COMMAND_GET_FILE_END 0x2
 #define COMMAND_GET_FILE_DATA 0x5
@@ -14,17 +15,24 @@
 int command_Get_File(char* msg, int len)
 {
 	int argsIndex = 0;
-	char* sourc;
+	char* _sourc;
 
-	argsIndex = commands_ExportArg(&msg, &sourc, 0);
+	argsIndex = commands_ExportArg(&msg, &_sourc, 0);
 
 	if(!argsIndex)
 	{
-		free(sourc);
+		free(_sourc);
 		free(msg);
 
 		return COMMANDS_UNKNOW_COMMAND;
 	}
+
+	int sourcLen = strlen((char*)hdd_Path) + strlen(_sourc);
+	char* sourc = malloc(sourcLen + sizeof(char));
+	memset(sourc, 0, sourcLen + sizeof(char));
+	memcpy(sourc, hdd_Path, strlen(hdd_Path));
+	memcpy(sourc + strlen(hdd_Path), _sourc, strlen(_sourc));
+	free(_sourc);
 
 	char* dest = malloc(strlen(msg + argsIndex) + sizeof(char));
 	memset(dest, 0, strlen(msg + argsIndex) + sizeof(char));

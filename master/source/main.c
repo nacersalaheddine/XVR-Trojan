@@ -160,6 +160,7 @@ int main(int argc, char* args[])
 	LOG_Init();
 	main_printStuff();
 
+	LOG_LoadConfing();
 	LOG(LOG_INFO, "Version: %s\n", VERSION);
 
 	SCL_PrintInfo();

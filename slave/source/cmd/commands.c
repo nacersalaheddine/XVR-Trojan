@@ -31,6 +31,16 @@ int commands_find(int cmd, uint8* msg)
 		return command_Get_File(msg);
 	}else if(cmd == COMMANDS_SEND_FILE){
 		return command_Send_File(msg);
+	}else if(cmd == COMMANDS_SCREEN_CAPTURE){
+		return command_Screen_Capture(msg);
+	}else if(cmd == COMMANDS_HDD_LS || cmd == COMMANDS_HDD_LS_ARG){
+		return command_hdd_Ls(msg);
+	}else if(cmd == COMMANDS_HDD_CD){
+		return command_hdd_Cd(msg);
+	}else if(cmd == COMMANDS_REMOVE){
+		return command_Remove(msg);
+	}else if(cmd == COMMANDS_DISK_LIST){
+		return command_Desk_list();
 	}
 	
 	return 0;

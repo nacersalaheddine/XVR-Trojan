@@ -3,6 +3,7 @@
 		"string.h": "c",
 		"stdlib.h": "c",
 		"stdio.h": "c",
-		"keylogger.h": "c"
+		"keylogger.h": "c",
+		"types.h": "c"
 	}
 }

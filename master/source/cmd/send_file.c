@@ -7,6 +7,7 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "progressbar.h"
+#include "cmd/hdd/path.h"
 
 #define COMMAND_SEND_FILE_END 0x6
 #define COMMAND_SEND_FILE_DATA 0x66
@@ -14,21 +15,29 @@
 int command_Send_File(char* msg, int len)
 {
 	int argsIndex = 0;
-	char* dest;
+	char* _dest;
 
-	argsIndex = commands_ExportArg(&msg, &dest, 0);
+	argsIndex = commands_ExportArg(&msg, &_dest, 0);
 
 	if(!argsIndex)
 	{
-		free(dest);
+		free(_dest);
 		free(msg);
 
 		return COMMANDS_UNKNOW_COMMAND;
 	}
 
+	int destLen = strlen((char*)hdd_Path) + strlen(_dest);
+	char* dest = malloc(destLen + sizeof(char));
+	memset(dest, 0, destLen + sizeof(char));
+	memcpy(dest, hdd_Path, strlen(hdd_Path));
+	memcpy(dest + strlen(hdd_Path), _dest, strlen(_dest));
+	free(_dest);
+
 	char* sourc = malloc(strlen(msg + argsIndex) + sizeof(char));
 	memset(sourc, 0, strlen(msg + argsIndex) + sizeof(char));
 	strcpy(sourc, msg + argsIndex);
+
 	free(msg);
 
 	FILE *f = fopen(sourc, "rb");

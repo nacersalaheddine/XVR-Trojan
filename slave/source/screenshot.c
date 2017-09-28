@@ -10,6 +10,31 @@ void screenshot_Init(void)
 	screenshot_backBuff = GetDC(GetDesktopWindow());
 }
 
+void screenshot_Calculate(double mX, double mY, OUT_INT width, OUT_INT height)
+{
+	if(mX <= 1 || mY <= 1)
+	{
+		if(mX <= 1)
+		{
+			mX = 10;
+		}
+
+		if(mY <= 1)
+		{
+			mY = 10;
+		}
+	}
+
+	int _scWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	int _scHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+	int scWidth = (int)((double)_scWidth * (mX / 100.0));
+	int scHeight = (int)((double)_scHeight * (mY / 100.0));
+	
+	*width = scWidth;
+	*height = scHeight;
+}
+
 uint8* screenshot_Take(double mX, double mY, OUT_INT width, OUT_INT height)
 {
 	if(mX <= 1 || mY <= 1)

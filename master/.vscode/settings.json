@@ -1,5 +1,10 @@
 {
 	"files.associations": {
-		"error.h": "c"
+		"error.h": "c",
+		"stdlib.h": "c",
+		"interface.h": "c",
+		"commands.h": "c",
+		"path.h": "c",
+		"types.h": "c"
 	}
 }

@@ -5,7 +5,7 @@
 #include "logger.h"
 #include "bmp.h"
 
-int bmp_Create(char* fname, void* data, int width, int height)
+int bmp_Create(char* fname, void* data, int width, int height, int hidden)
 {
 	BITMAP_INFO_HEADER bmpInfo = { sizeof(BITMAP_INFO_HEADER) };
 	bmpInfo.biSizeImage = width * height * 3;
@@ -26,7 +26,10 @@ int bmp_Create(char* fname, void* data, int width, int height)
 	bmpFile.bfReserved1 = 0;
 	bmpFile.bfReserved2 = 0;
 
-	LOG(LOG_INFO, "Creating BMP!\n");
+	if(!hidden)
+	{
+		LOG(LOG_INFO, "Creating BMP!\n");
+	}
 
 	FILE *f;
 
@@ -59,9 +62,12 @@ int bmp_Create(char* fname, void* data, int width, int height)
 
 	uint32 headerSize = countBmpFile + countBmpInfo;
 
-	LOG(LOG_INFO, "Header: %d %s\n", (headerSize / 1024) < 1 ? headerSize : headerSize / 1024, (headerSize / 1024) < 1 ? "B" : "KB");
-	LOG(LOG_INFO, "Data: %d %s\n", (countData / 1024) < 1 ? countData : countData / 1024, (countData / 1024) < 1 ? "B" : "KB");
-	LOG(LOG_SUCC, "Done!\n");
+	if(!hidden)
+	{
+		LOG(LOG_INFO, "Header: %d %s\n", (headerSize / 1024) < 1 ? headerSize : headerSize / 1024, (headerSize / 1024) < 1 ? "B" : "KB");
+		LOG(LOG_INFO, "Data: %d %s\n", (countData / 1024) < 1 ? countData : countData / 1024, (countData / 1024) < 1 ? "B" : "KB");
+		LOG(LOG_SUCC, "Done!\n");
+	}
 
 	return 1;
 }

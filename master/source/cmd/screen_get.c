@@ -204,7 +204,7 @@ int command_Screen_Get(char* msg, int len)
 	fclose(f);
 	remove(COMMAND_SCREEN_GET_TEMP_FILE);
 
-	bmp_Create(fpath, imageData, scWidth, scHeight);
+	bmp_Create(fpath, imageData, scWidth, scHeight, 0);
 	
 	free(imageData);
 	free(fpath);
