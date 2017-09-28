@@ -3,4 +3,5 @@
 - You can do what you wan't with the code
 - I programmed it just for fun
 
-Here are
+Here is the program when started
+  ![Alt text](image1.png)
