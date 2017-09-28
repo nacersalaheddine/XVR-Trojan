@@ -5,3 +5,6 @@
 
 Here is the program when started
   ![Alt text](image1.png)
+
+Here is the list of commands
+  ![Alt text](image2.png)
