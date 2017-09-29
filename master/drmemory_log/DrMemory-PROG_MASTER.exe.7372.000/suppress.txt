@@ -1,2 +1,0 @@
-# File for suppressing errors found in pid 7372: "PROG_MASTER.exe"
-
