@@ -1,0 +1,5 @@
+Dr. Memory version 1.11.0 build 2 built on Aug 29 2016 02:42:07
+Dr. Memory errors that are likely to be false positives, for pid 192: "PROG_MASTER.exe"
+These errors matched the blacklist 'C:\Windows*.d??' for 4 frames.
+Run with -lib_blacklist_frames 0 to treat these as regular errors.
+If these are all false positives and your focus is unaddressable errors, consider running with -light to skip all uninitialized reads and leaks for higher performance.

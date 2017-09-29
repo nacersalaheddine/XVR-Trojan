@@ -1,0 +1,12 @@
+#ifndef __SC_ERROR_H
+#define __SC_ERROR_H
+
+#define SC_ERROR_NO_ERROR 0
+#define SC_ERROR_INIT 1
+#define SC_ERROR_IS_ALREADY_RUNNING 2
+#define SC_ERROR_CREATETHREAD 3
+#define SC_ERROR_CREATEWINDOW 4
+#define SC_ERROR_USERS_CLOSED 5
+#define SC_ERROR_STOPED 6
+
+#endif

@@ -1,0 +1,20 @@
+# File for suppressing errors found in pid 1708: "PROG_MASTER.exe"
+
+# Suppression for Error #1
+UNINITIALIZED READ
+name=Error #1 (update to meaningful name)
+MSWSOCK.dll!Tcpip4_WSHGetSocketInformation
+WS2_32.dll!setsockopt
+PROG_MASTER.exe!server_Create
+PROG_MASTER.exe!main_cmd
+PROG_MASTER.exe!main
+
+## Mod+offs-style suppression for Error #1:
+UNINITIALIZED READ
+name=Error #1 (update to meaningful name)
+<MSWSOCK.dll+0x11329>
+<WS2_32.dll+0xfebe>
+<PROG_MASTER.exe+0x1603>
+<PROG_MASTER.exe+0x1e34>
+<PROG_MASTER.exe+0x2139>
+

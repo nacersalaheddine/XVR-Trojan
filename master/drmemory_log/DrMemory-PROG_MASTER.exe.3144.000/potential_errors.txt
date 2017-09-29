@@ -1,0 +1,182 @@
+Dr. Memory version 1.11.0 build 2 built on Aug 29 2016 02:42:07
+Dr. Memory errors that are likely to be false positives, for pid 3144: "PROG_MASTER.exe"
+These errors matched the blacklist 'C:\Windows*.d??' for 4 frames.
+Run with -lib_blacklist_frames 0 to treat these as regular errors.
+If these are all false positives and your focus is unaddressable errors, consider running with -light to skip all uninitialized reads and leaks for higher performance.
+
+Potential Error #1: LEAK 28 direct bytes 0x027d5200-0x027d521c + 924 indirect bytes
+# 0 replace_RtlAllocateHeap                     [d:\drmemory_package\common\alloc_replace.c:3770]
+# 1 RPCRT4.dll!RpcBindingFree                  +0x375    (0x7412f6a6 <RPCRT4.dll+0x2f6a6>)
+# 2 RPCRT4.dll!NdrConformantStringUnmarshall   +0x433    (0x74115db4 <RPCRT4.dll+0x15db4>)
+# 3 RPCRT4.dll!NdrSimpleStructMarshall         +0x103a   (0x7412278b <RPCRT4.dll+0x2278b>)
+# 4 RPCRT4.dll!NdrClientCall2                  +0x4af    (0x741067f0 <RPCRT4.dll+0x67f0>)
+# 5 RPCRT4.dll!NdrClientCall4                  +0x13     (0x74104994 <RPCRT4.dll+0x4994>)
+# 6 SspiCli.dll!CredUnmarshalTargetInfo        +0x1687   (0x73ed6e28 <SspiCli.dll+0x6e28>)
+# 7 SspiCli.dll!DeleteSecurityPackageW         +0x6c5    (0x73edcf56 <SspiCli.dll+0xcf56>)
+# 8 SspiCli.dll!DeleteSecurityPackageW         +0x8ca    (0x73edd15b <SspiCli.dll+0xd15b>)
+# 9 SspiCli.dll!DeleteSecurityPackageW         +0x917    (0x73edd1a8 <SspiCli.dll+0xd1a8>)
+#10 SspiCli.dll!CredUnmarshalTargetInfo        +0x31ad   (0x73ed894e <SspiCli.dll+0x894e>)
+#11 SspiCli.dll!GetUserNameExW                 +0x44     (0x73eddb45 <SspiCli.dll+0xdb45>)
+
+Potential Error #2: HANDLE LEAK: KERNEL handle 0x000000a0 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtCreateEvent
+# 1 MSWSOCK.dll!WSPStartup                 +0x34a    (0x72fbb49b <MSWSOCK.dll+0xb49b>)
+# 2 MSWSOCK.dll!WSPStartup                 +0x2f     (0x72fbb180 <MSWSOCK.dll+0xb180>)
+# 3 WS2_32.dll!WSAAddressToStringW         +0x4e7    (0x75944ab8 <WS2_32.dll+0x14ab8>)
+# 4 WS2_32.dll!WSASocketW                  +0x34c    (0x75941a4d <WS2_32.dll+0x11a4d>)
+# 5 WS2_32.dll!socket                      +0x65     (0x75944576 <WS2_32.dll+0x14576>)
+# 6 server_Create                           [source/server.c:62]
+# 7 main_cmd                                [source/main.c:97]
+# 8 main                                    [source/main.c:192]
+Note: @0:00:07.015 in thread 8464
+
+Potential Error #3: HANDLE LEAK: KERNEL handle 0x000000ac and 0 similar handle(s) were opened but not closed:
+# 0 system call NtCreateThreadEx
+# 1 KERNELBASE.dll!CreateRemoteThreadEx       +0x1e6    (0x773164e7 <KERNELBASE.dll+0xe64e7>)
+# 2 KERNEL32.dll!CreateThread                 +0x26     (0x757746d7 <KERNEL32.dll+0x146d7>)
+# 3 server_ConnectionHandle                    [source/server.c:191]
+# 4 main_cmd                                   [source/main.c:121]
+# 5 main                                       [source/main.c:192]
+Note: @0:00:07.025 in thread 8464
+
+Potential Error #4: HANDLE LEAK: KERNEL handle 0x00000150 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtOpenKey            
+# 1 KERNELBASE.dll!IsValidCodePage                 +0x1c8    (0x7731fc49 <KERNELBASE.dll+0xefc49>)
+# 2 KERNELBASE.dll!IsValidLocale                   +0x286    (0x772f3567 <KERNELBASE.dll+0xc3567>)
+# 3 KERNELBASE.dll!IsValidLocale                   +0xdb     (0x772f33bc <KERNELBASE.dll+0xc33bc>)
+# 4 msvcrt.dll!__get_qualified_locale
+# 5 msvcrt.dll!_expandlocale
+# 6 msvcrt.dll!_get_current_locale
+# 7 msvcrt.dll!_get_current_locale
+# 8 msvcrt.dll!setlocale 
+# 9 __mingw_dirname                                 [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#10 .text                                           [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#11 __mingw_glob                                    [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#12 _setargv                                        [source/cmd/hdd/ls.c:247]
+#13 .text          
+#14 mainCRTStartup 
+#15 ntdll.dll!RtlGetAppContainerNamedObjectPath    +0xfc     (0x7746582d <ntdll.dll+0x6582d>)
+#16 ntdll.dll!RtlGetAppContainerNamedObjectPath    +0xcc     (0x774657fd <ntdll.dll+0x657fd>)
+Note: @0:00:07.032 in thread 8464
+
+Potential Error #5: HANDLE LEAK: KERNEL handle 0x00000154 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtOpenKey            
+# 1 KERNELBASE.dll!IsValidCodePage                 +0x1c8    (0x7731fc49 <KERNELBASE.dll+0xefc49>)
+# 2 KERNELBASE.dll!IsValidLocale                   +0x326    (0x772f3607 <KERNELBASE.dll+0xc3607>)
+# 3 KERNELBASE.dll!IsValidLocale                   +0xc9     (0x772f33aa <KERNELBASE.dll+0xc33aa>)
+# 4 msvcrt.dll!__get_qualified_locale
+# 5 msvcrt.dll!_expandlocale
+# 6 msvcrt.dll!_get_current_locale
+# 7 msvcrt.dll!_get_current_locale
+# 8 msvcrt.dll!setlocale 
+# 9 __mingw_dirname                                 [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#10 .text                                           [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#11 __mingw_glob                                    [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#12 _setargv                                        [source/cmd/hdd/ls.c:247]
+#13 .text          
+#14 mainCRTStartup 
+#15 ntdll.dll!RtlGetAppContainerNamedObjectPath    +0xfc     (0x7746582d <ntdll.dll+0x6582d>)
+#16 ntdll.dll!RtlGetAppContainerNamedObjectPath    +0xcc     (0x774657fd <ntdll.dll+0x657fd>)
+Note: @0:00:07.034 in thread 8464
+
+Potential Error #6: HANDLE LEAK: KERNEL handle 0x00000158 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtCreateEvent
+# 1 KERNELBASE.dll!CreateEventExW          +0x5a     (0x77319fbb <KERNELBASE.dll+0xe9fbb>)
+# 2 KERNELBASE.dll!CreateEventW            +0x23     (0x77316984 <KERNELBASE.dll+0xe6984>)
+# 3 RPCRT4.dll!RpcAsyncGetCallStatus       +0x14a    (0x74135cab <RPCRT4.dll+0x35cab>)
+# 4 RPCRT4.dll!RpcServerRegisterIf3        +0x846    (0x74135487 <RPCRT4.dll+0x35487>)
+# 5 RPCRT4.dll!RpcAsyncGetCallStatus       +0x195    (0x74135cf6 <RPCRT4.dll+0x35cf6>)
+# 6 RPCRT4.dll!RpcAsyncGetCallStatus       +0x2a0    (0x74135e01 <RPCRT4.dll+0x35e01>)
+# 7 RPCRT4.dll!RpcStringBindingComposeW    +0x317    (0x7412ff48 <RPCRT4.dll+0x2ff48>)
+# 8 SspiCli.dll!CredUnmarshalTargetInfo    +0x162f   (0x73ed6dd0 <SspiCli.dll+0x6dd0>)
+# 9 SspiCli.dll!DeleteSecurityPackageW     +0x6c5    (0x73edcf56 <SspiCli.dll+0xcf56>)
+#10 SspiCli.dll!DeleteSecurityPackageW     +0x8ca    (0x73edd15b <SspiCli.dll+0xd15b>)
+#11 SspiCli.dll!DeleteSecurityPackageW     +0x917    (0x73edd1a8 <SspiCli.dll+0xd1a8>)
+#12 SspiCli.dll!CredUnmarshalTargetInfo    +0x31ad   (0x73ed894e <SspiCli.dll+0x894e>)
+#13 SspiCli.dll!GetUserNameExW             +0x44     (0x73eddb45 <SspiCli.dll+0xdb45>)
+#14 SspiCli.dll!GetUserNameExA             +0x56     (0x73eddc57 <SspiCli.dll+0xdc57>)
+#15 ADVAPI32.dll!GetUserNameA              +0x15     (0x74b72196 <ADVAPI32.dll+0x22196>)
+#16 LOG_Init                                [source/logger.c:26]
+#17 main                                    [source/main.c:160]
+Note: @0:00:07.034 in thread 8464
+
+Potential Error #7: HANDLE LEAK: KERNEL handle 0x0000015c and 0 similar handle(s) were opened but not closed:
+# 0 system call NtOpenKey            
+# 1 KERNELBASE.dll!IsValidCodePage                 +0x1c8    (0x7731fc49 <KERNELBASE.dll+0xefc49>)
+# 2 KERNELBASE.dll!IsValidLocale                   +0x2d6    (0x772f35b7 <KERNELBASE.dll+0xc35b7>)
+# 3 KERNELBASE.dll!IsValidLocale                   +0xd2     (0x772f33b3 <KERNELBASE.dll+0xc33b3>)
+# 4 msvcrt.dll!__get_qualified_locale
+# 5 msvcrt.dll!_expandlocale
+# 6 msvcrt.dll!_get_current_locale
+# 7 msvcrt.dll!_get_current_locale
+# 8 msvcrt.dll!setlocale 
+# 9 __mingw_dirname                                 [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#10 .text                                           [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#11 __mingw_glob                                    [../../../src/gcc-6.3.0/libgcc/config/i386/cygwin.S:184]
+#12 _setargv                                        [source/cmd/hdd/ls.c:247]
+#13 .text          
+#14 mainCRTStartup 
+#15 ntdll.dll!RtlGetAppContainerNamedObjectPath    +0xfc     (0x7746582d <ntdll.dll+0x6582d>)
+#16 ntdll.dll!RtlGetAppContainerNamedObjectPath    +0xcc     (0x774657fd <ntdll.dll+0x657fd>)
+Note: @0:00:07.036 in thread 8464
+
+Potential Error #8: HANDLE LEAK: KERNEL handle 0x00000164 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtDuplicateObject
+# 1 KERNELBASE.dll!DuplicateHandle             +0x43     (0x77328604 <KERNELBASE.dll+0xf8604>)
+# 2 RPCRT4.dll!RpcBindingUnbind                +0x1c8    (0x74132bc9 <RPCRT4.dll+0x32bc9>)
+# 3 RPCRT4.dll!RpcBindingUnbind                +0x9d     (0x74132a9e <RPCRT4.dll+0x32a9e>)
+# 4 RPCRT4.dll!RpcBindingFromStringBindingW    +0x10a    (0x7413006b <RPCRT4.dll+0x3006b>)
+# 5 SspiCli.dll!CredUnmarshalTargetInfo        +0x1642   (0x73ed6de3 <SspiCli.dll+0x6de3>)
+# 6 SspiCli.dll!DeleteSecurityPackageW         +0x6c5    (0x73edcf56 <SspiCli.dll+0xcf56>)
+# 7 SspiCli.dll!DeleteSecurityPackageW         +0x8ca    (0x73edd15b <SspiCli.dll+0xd15b>)
+# 8 SspiCli.dll!DeleteSecurityPackageW         +0x917    (0x73edd1a8 <SspiCli.dll+0xd1a8>)
+# 9 SspiCli.dll!CredUnmarshalTargetInfo        +0x31ad   (0x73ed894e <SspiCli.dll+0x894e>)
+#10 SspiCli.dll!GetUserNameExW                 +0x44     (0x73eddb45 <SspiCli.dll+0xdb45>)
+#11 SspiCli.dll!GetUserNameExA                 +0x56     (0x73eddc57 <SspiCli.dll+0xdc57>)
+#12 ADVAPI32.dll!GetUserNameA                  +0x15     (0x74b72196 <ADVAPI32.dll+0x22196>)
+#13 LOG_Init                                    [source/logger.c:26]
+#14 main                                        [source/main.c:160]
+Note: @0:00:07.036 in thread 8464
+
+Potential Error #9: HANDLE LEAK: KERNEL handle 0x00000168 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtCreateEvent   
+# 1 KERNELBASE.dll!CreateEventExW             +0x5a     (0x77319fbb <KERNELBASE.dll+0xe9fbb>)
+# 2 KERNELBASE.dll!CreateEventW               +0x23     (0x77316984 <KERNELBASE.dll+0xe6984>)
+# 3 RPCRT4.dll!RpcBindingUnbind               +0x184    (0x74132b85 <RPCRT4.dll+0x32b85>)
+# 4 RPCRT4.dll!RpcBindingUnbind               +0x9d     (0x74132a9e <RPCRT4.dll+0x32a9e>)
+# 5 RPCRT4.dll!RpcBindingFromStringBindingW   +0x10a    (0x7413006b <RPCRT4.dll+0x3006b>)
+# 6 SspiCli.dll!CredUnmarshalTargetInfo       +0x1642   (0x73ed6de3 <SspiCli.dll+0x6de3>)
+# 7 SspiCli.dll!DeleteSecurityPackageW        +0x6c5    (0x73edcf56 <SspiCli.dll+0xcf56>)
+# 8 SspiCli.dll!DeleteSecurityPackageW        +0x8ca    (0x73edd15b <SspiCli.dll+0xd15b>)
+# 9 SspiCli.dll!DeleteSecurityPackageW        +0x917    (0x73edd1a8 <SspiCli.dll+0xd1a8>)
+#10 SspiCli.dll!CredUnmarshalTargetInfo       +0x31ad   (0x73ed894e <SspiCli.dll+0x894e>)
+#11 SspiCli.dll!GetUserNameExW                +0x44     (0x73eddb45 <SspiCli.dll+0xdb45>)
+#12 SspiCli.dll!GetUserNameExA                +0x56     (0x73eddc57 <SspiCli.dll+0xdc57>)
+#13 ADVAPI32.dll!GetUserNameA                 +0x15     (0x74b72196 <ADVAPI32.dll+0x22196>)
+#14 LOG_Init                                   [source/logger.c:26]
+#15 main                                       [source/main.c:160]
+Note: @0:00:07.036 in thread 8464
+
+Potential Error #10: HANDLE LEAK: KERNEL handle 0x00000178 and 0 similar handle(s) were opened but not closed:
+# 0 system call NtDuplicateObject
+# 1 KERNELBASE.dll!DuplicateHandle             +0x43     (0x77328604 <KERNELBASE.dll+0xf8604>)
+# 2 WS2_32.dll!WahOpenCurrentThread            +0x41     (0x75947082 <WS2_32.dll+0x17082>)
+# 3 WS2_32.dll!WSAAddressToStringW             +0x2a1d   (0x75946fee <WS2_32.dll+0x16fee>)
+# 4 WS2_32.dll!WSAAddressToStringW             +0x2974   (0x75946f45 <WS2_32.dll+0x16f45>)
+# 5 WS2_32.dll!WSAStartup                      +0x2a0    (0x75935de1 <WS2_32.dll+0x5de1>)
+# 6 server_WsaInit                              [source/server.c:45]
+# 7 main                                        [source/main.c:170]
+Note: @0:00:07.036 in thread 8464
+
+DUPLICATE POTENTIAL ERROR COUNTS:
+
+POTENTIAL ERRORS FOUND:
+      0 unique,     0 total potential unaddressable access(es)
+      0 unique,     0 total potential uninitialized access(es)
+      0 unique,     0 total potential invalid heap argument(s)
+      0 unique,     0 total potential GDI usage error(s)
+      9 unique,     9 total potential handle leak(s)
+      0 unique,     0 total potential warning(s)
+      1 unique,     1 total,    952 byte(s) of potential leak(s)
+      0 unique,     0 total,      0 byte(s) of potential possible leak(s)
+Details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.3144.000\potential_errors.txt

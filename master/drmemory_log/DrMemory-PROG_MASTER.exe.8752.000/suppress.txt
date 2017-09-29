@@ -1,0 +1,44 @@
+# File for suppressing errors found in pid 8752: "PROG_MASTER.exe"
+
+# Suppression for Error #1
+UNINITIALIZED READ
+name=Error #1 (update to meaningful name)
+MSWSOCK.dll!Tcpip4_WSHGetSocketInformation
+WS2_32.dll!setsockopt
+PROG_MASTER.exe!server_Create
+PROG_MASTER.exe!main_cmd
+PROG_MASTER.exe!main
+
+## Mod+offs-style suppression for Error #1:
+UNINITIALIZED READ
+name=Error #1 (update to meaningful name)
+<MSWSOCK.dll+0x11329>
+<WS2_32.dll+0xfebe>
+<PROG_MASTER.exe+0x1603>
+<PROG_MASTER.exe+0x1e34>
+<PROG_MASTER.exe+0x2134>
+
+# Suppression for Error #2
+LEAK
+name=Error #2 (update to meaningful name)
+drmemorylib.dll!replace_malloc
+PROG_MASTER.exe!net_ReceiveDataTimeout
+PROG_MASTER.exe!command_hdd_Ls
+PROG_MASTER.exe!commands_find
+PROG_MASTER.exe!commands_Translate
+PROG_MASTER.exe!server_ConnectionHandle
+PROG_MASTER.exe!main_cmd
+PROG_MASTER.exe!main
+
+## Mod+offs-style suppression for Error #2:
+LEAK
+name=Error #2 (update to meaningful name)
+<drmemorylib.dll+0x20300>
+<PROG_MASTER.exe+0x3516>
+<PROG_MASTER.exe+0x6dc9>
+<PROG_MASTER.exe+0x5297>
+<PROG_MASTER.exe+0x5311>
+<PROG_MASTER.exe+0x1a76>
+<PROG_MASTER.exe+0x1f1f>
+<PROG_MASTER.exe+0x2134>
+

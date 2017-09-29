@@ -1,0 +1,8 @@
+C:\Windows\SYSTEM32\ntdll.dll
+C:\Windows\SysWOW64\mswsock.dll
+C:\Windows\System32\WS2_32.dll
+C:\Windows\System32\RPCRT4.dll
+C:\Windows\System32\SspiCli.dll
+C:\Windows\System32\ADVAPI32.DLL
+C:\Windows\System32\KERNELBASE.dll
+C:\Windows\System32\KERNEL32.DLL

@@ -1,0 +1,53 @@
+Dr. Memory version 1.11.0 build 2 built on Aug 29 2016 02:42:07
+Dr. Memory results for pid 10164: "PROG_MASTER.exe"
+Application cmdline: "bin/PROG_MASTER.exe"
+Recorded 115 suppression(s) from default C:\Program Files (x86)\Dr. Memory\bin\suppress-default.txt
+
+Error #1: INVALID HEAP ARGUMENT to free 0x6a5c1752
+# 0 replace_free                 [d:\drmemory_package\common\alloc_replace.c:2706]
+# 1 SC_FreeLibrary               [source/sc.c:104]
+# 2 main                         [source/main.c:210]
+Note: @0:00:04.726 in thread 7368
+
+Error #2: INVALID HEAP ARGUMENT to free 0x6a5c17b9
+# 0 replace_free                 [d:\drmemory_package\common\alloc_replace.c:2706]
+# 1 SC_FreeLibrary               [source/sc.c:105]
+# 2 main                         [source/main.c:210]
+Note: @0:00:04.727 in thread 7368
+
+Error #3: INVALID HEAP ARGUMENT to free 0x6a5c1731
+# 0 replace_free                 [d:\drmemory_package\common\alloc_replace.c:2706]
+# 1 SC_FreeLibrary               [source/sc.c:106]
+# 2 main                         [source/main.c:210]
+Note: @0:00:04.728 in thread 7368
+
+Error #4: INVALID HEAP ARGUMENT to free 0x6a5c12d0
+# 0 replace_free                 [d:\drmemory_package\common\alloc_replace.c:2706]
+# 1 SC_FreeLibrary               [source/sc.c:107]
+# 2 main                         [source/main.c:210]
+Note: @0:00:04.728 in thread 7368
+
+===========================================================================
+FINAL SUMMARY:
+
+DUPLICATE ERROR COUNTS:
+
+SUPPRESSIONS USED:
+
+ERRORS FOUND:
+      0 unique,     0 total unaddressable access(es)
+      0 unique,     0 total uninitialized access(es)
+      4 unique,     4 total invalid heap argument(s)
+      0 unique,     0 total GDI usage error(s)
+      0 unique,     0 total handle leak(s)
+      0 unique,     0 total warning(s)
+      0 unique,     0 total,      0 byte(s) of leak(s)
+      0 unique,     0 total,      0 byte(s) of possible leak(s)
+ERRORS IGNORED:
+     16 potential error(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.10164.000\potential_errors.txt)
+      3 potential leak(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.10164.000\potential_errors.txt)
+     76 unique,    91 total,  37382 byte(s) of still-reachable allocation(s)
+         (re-run with "-show_reachable" for details)
+Details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.10164.000\results.txt

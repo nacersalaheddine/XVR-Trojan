@@ -1,0 +1,68 @@
+Dr. Memory symbol cache version 14
+      1239,1150784,4239859494043648000,4239859494043648000,1158112,2842342176,1146880
+0
+memcmp,0x52b10
+strcspn,0x404f0
+memmove,0x54810
+malloc,0x310a0
+mallopt,0x0
+strcpy,0x401a0
+strspn,0x418b0
+wcsstr,0x55540
+stpcpy,0x0
+wmemset,0x0
+mallinfo,0x0
+memchr,0x52a50
+cfree,0x0
+wcscpy,0x42070
+strstr,0x55160
+memset,0x54d90
+calloc,0x3abf0
+strrchr,0x55020
+strncmp,0x40cc0
+strncpy,0x40ec0
+strncat,0x40aa0
+strcat,0x401b0
+wcslen,0x41420
+malloc_get_state,0x0
+malloc_set_state,0x0
+Concurrency::details::Security::EncodePointer,0x0
+wcsncmp,0x428c0
+wcsrchr,0x55490
+wmemcpy,0x0
+wmemchr,0x0
+wmemcmp,0x0
+operator delete[] nothrow,0x0
+operator delete[],0x0
+strlen,0x407a0
+wcscmp,0x41ee0
+strchr,0x54ef0
+wcsnlen,0x41550
+memcpy,0x54290
+strcmp,0x40310
+realloc,0x31dd0
+strnlen,0x412f0
+wcschr,0x553d0
+_msize,0x35470
+operator new,0x0
+operator delete,0x0
+std::_DebugHeapDelete<>,0x0
+free_impl,0x0
+operator delete nothrow,0x0
+_malloc_dbg,0x0
+_calloc_impl,0x0
+calloc_impl,0x0
+operator new nothrow,0x0
+free,0x2e7a0
+malloc_usable_size,0x0
+malloc_impl,0x0
+malloc_trim,0x0
+independent_calloc,0x0
+sbrk,0x0
+strncasecmp,0x0
+independent_comalloc,0x0
+operator new[] nothrow,0x0
+operator new[],0x0
+malloc_stats,0x0
+realloc_impl,0x0
+strcasecmp,0x0

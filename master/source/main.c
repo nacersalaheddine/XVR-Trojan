@@ -6,6 +6,7 @@
 #include "server.h"
 #include "input.h"
 #include "SCL.h"
+#include "sc/sc.h"
 
 #define MAIN_CMD_BREAK -1
 #define MAIN_CMD_UNKNOWN 0
@@ -165,6 +166,8 @@ int main(int argc, char* args[])
 
 	SCL_PrintInfo();
 
+	SC_LoadLibrary();
+
 	LOG(LOG_INFO, "Server port: %d\n", server_UsingPort);
 	LOG(LOG_INFO, "Starting WSA...\n");
 
@@ -203,7 +206,14 @@ int main(int argc, char* args[])
 		}
 	}
 
+	LOG(LOG_INFO, "Freeing libraries...\n");
+	SC_FreeLibrary();
+
+	LOG(LOG_INFO, "Freeing server...\n");
 	server_Cleanup();
-	
+
+	LOG(LOG_SUCC, "Stoped!");
 	exit(0);
+
+	return 0;
 }

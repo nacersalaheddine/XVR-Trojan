@@ -8,6 +8,8 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "bmp.h"
+#include "sc/sc.h"
+#include "sc/error.h"
 
 #define COMMAND_SCREEN_CAP_DATA 0xA3
 #define COMMAND_SCREEN_CAP_END 0xD3
@@ -21,9 +23,38 @@
 //i don't know JavaScript and i don't know how this works
 char* command_Screen_CaptureView = "<html>\n<head>\n<title>XVR-ScreenCap</title>\n</head>\n<body>\n<img src=\"ScreenCap.bmp\" id=\"SC\">\n\n<script language=\"javascript\" type=\"text/javascript\" >\nfunction ChangeMedia()\n{\nvar img = document.getElementById(\'SC\')\nimg.src = img.src + \'?\' + Math.random();\n}\nsetInterval(\"ChangeMedia()\", 400);\n</script>\n</body>\n</html>\n";
 
-int command_Screen_Capture_PlaceView(void)
+int command_Screen_Capture_SCView(int interval)
 {
-	LOG(LOG_INFO, "Creating \"ScreenCapture.html\"...");
+	LOG(LOG_INFO, "Starting SC...\n");
+	
+	SC_SetInterval(interval);
+	
+	if(SC_Start() != SC_ERROR_NO_ERROR)
+	{
+		LOG(LOG_ERR, "Failed to start SC!\n");
+		
+		return 0;
+	}
+
+	Sleep(100);
+
+	int sc_error = SC_GetLastError();
+
+	if(sc_error != SC_ERROR_NO_ERROR)
+	{
+		LOG(LOG_ERR, "Failed to start SC!\n");
+		
+		return 0;
+	}
+
+	LOG(LOG_SUCC, "Started!\n");
+
+	return 1;
+}
+
+int command_Screen_Capture_WebView(void)
+{
+	LOG(LOG_INFO, "Creating \"ScreenCapture.html\"...\n");
 
 	FILE *f = fopen("ScreenCapture.html", "w");
 
@@ -85,9 +116,25 @@ int command_Screen_Capture(char* msg, int len)
 		LOG(LOG_INFO, "Interval is set to default (%d)\n", COMMAND_SCREEN_CAP_DEFAULT_INTERVAL);
 	}
 
-	if(!command_Screen_Capture_PlaceView())
+	if(SC_CanRun)
 	{
-		return COMMANDS_SUCC;
+		if(!command_Screen_Capture_SCView(interval))
+		{
+			LOG(LOG_INFO, "We will use the browser for the stream!\n");
+			
+			if(!command_Screen_Capture_WebView())
+			{
+				return COMMANDS_SUCC;
+			}
+		}
+	}else{
+		LOG(LOG_ERR, "The Libraries are missing for SC\n");
+		LOG(LOG_INFO, "We will use the browser for the stream!\n");
+
+		if(!command_Screen_Capture_WebView())
+		{
+			return COMMANDS_SUCC;
+		}
 	}
 
 	uint8 s_size[13];
@@ -164,6 +211,14 @@ int command_Screen_Capture(char* msg, int len)
 			}
 
 			LOG(LOG_INFO, "Total frames: %d\n", frames);
+
+			if(SC_CanRun)
+			{
+				LOG(LOG_INFO, "Stopping SC\n");
+
+				SC_Stop();
+			}
+
 			LOG(LOG_SUCC, "Stopped!\n");
 
 			return COMMANDS_SUCC;
@@ -174,6 +229,16 @@ int command_Screen_Capture(char* msg, int len)
 			LOG(LOG_ERR, "Failed to continue capturing\n");
 
 			return NET_LOST_CONNECTION;
+		}
+
+		if(SC_CanRun)
+		{
+			if(SC_GetLastError() != SC_ERROR_NO_ERROR)
+			{
+				LOG(LOG_ERR, "SC Stoped working!\n");
+				
+				SC_CanRun = 0;
+			}
 		}
 
 		Sleep(interval);

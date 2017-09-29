@@ -1,0 +1,34 @@
+Dr. Memory version 1.11.0 build 2 built on Aug 29 2016 02:42:07
+Dr. Memory results for pid 5732: "PROG_MASTER.exe"
+Application cmdline: "bin/PROG_MASTER.exe"
+Recorded 115 suppression(s) from default C:\Program Files (x86)\Dr. Memory\bin\suppress-default.txt
+
+Error #1: LEAK 256 direct bytes 0x02c61ef8-0x02c61ff8 + 0 indirect bytes
+# 0 replace_malloc                [d:\drmemory_package\common\alloc_replace.c:2576]
+# 1 LOG_LoadConfing               [source/logger.c:49]
+# 2 main                          [source/main.c:163]
+
+===========================================================================
+FINAL SUMMARY:
+
+DUPLICATE ERROR COUNTS:
+
+SUPPRESSIONS USED:
+
+ERRORS FOUND:
+      0 unique,     0 total unaddressable access(es)
+      0 unique,     0 total uninitialized access(es)
+      0 unique,     0 total invalid heap argument(s)
+      0 unique,     0 total GDI usage error(s)
+      0 unique,     0 total handle leak(s)
+      0 unique,     0 total warning(s)
+      1 unique,     1 total,    256 byte(s) of leak(s)
+      0 unique,     0 total,      0 byte(s) of possible leak(s)
+ERRORS IGNORED:
+      7 potential error(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.5732.000\potential_errors.txt)
+      1 potential leak(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.5732.000\potential_errors.txt)
+     39 unique,    39 total,  16062 byte(s) of still-reachable allocation(s)
+         (re-run with "-show_reachable" for details)
+Details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.5732.000\results.txt

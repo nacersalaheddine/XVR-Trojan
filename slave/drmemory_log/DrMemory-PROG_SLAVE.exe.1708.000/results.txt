@@ -1,0 +1,54 @@
+Dr. Memory version 1.11.0 build 2 built on Aug 29 2016 02:42:07
+Dr. Memory results for pid 1708: "PROG_SLAVE.exe"
+Application cmdline: "bin/PROG_SLAVE.exe"
+Recorded 115 suppression(s) from default C:\Program Files (x86)\Dr. Memory\bin\suppress-default.txt
+
+Error #1: INVALID HEAP ARGUMENT to free 0x00f91957
+# 0 replace_free                  [d:\drmemory_package\common\alloc_replace.c:2706]
+# 1 keylogger_Start               [source/keylogger.c:209]
+# 2 WinMain@16                    [source/main.c:20]
+# 3 main                          [../../../src/gcc-6.3.0/libgcc/libgcc2.c:1169]
+Note: @0:00:00.750 in thread 2084
+
+Error #2: UNINITIALIZED READ: reading register ecx
+# 0 MSWSOCK.dll!Tcpip4_WSHGetSocketInformation  +0x40d9   (0x72fc1329 <MSWSOCK.dll+0x11329>)
+# 1 WS2_32.dll!setsockopt                       +0x14d    (0x7593febe <WS2_32.dll+0xfebe>)
+# 2 client_Connect                               [source/client.c:52]
+# 3 WinMain@16                                   [source/main.c:25]
+# 4 main                                         [../../../src/gcc-6.3.0/libgcc/libgcc2.c:1169]
+Note: @0:00:03.029 in thread 2084
+Note: instruction: test   %ecx %ecx
+
+Error #3: INVALID HEAP ARGUMENT to free 0x02bb4d99
+# 0 replace_free                          [d:\drmemory_package\common\alloc_replace.c:2706]
+# 1 commands_find                         [source/cmd/commands.c:16]
+# 2 commands_Translate                    [source/cmd/commands.c:54]
+# 3 client_ConnectionHandle               [source/client.c:108]
+# 4 WinMain@16                            [source/main.c:26]
+# 5 main                                  [../../../src/gcc-6.3.0/libgcc/libgcc2.c:1169]
+Note: @0:00:09.975 in thread 2084
+Note: refers to -2 byte(s) beyond last valid byte in prior malloc
+Note: prev lower malloc:  0x02bb4d98-0x02bb4d9b
+
+===========================================================================
+FINAL SUMMARY:
+
+DUPLICATE ERROR COUNTS:
+
+SUPPRESSIONS USED:
+
+ERRORS FOUND:
+      0 unique,     0 total unaddressable access(es)
+      1 unique,     1 total uninitialized access(es)
+      2 unique,     2 total invalid heap argument(s)
+      0 unique,     0 total GDI usage error(s)
+      0 unique,     0 total handle leak(s)
+      0 unique,     0 total warning(s)
+      0 unique,     0 total,      0 byte(s) of leak(s)
+      0 unique,     0 total,      0 byte(s) of possible leak(s)
+ERRORS IGNORED:
+     35 potential error(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\slave\drmemory_log\DrMemory-PROG_SLAVE.exe.1708.000\potential_errors.txt)
+    130 unique,   192 total,  63272 byte(s) of still-reachable allocation(s)
+         (re-run with "-show_reachable" for details)
+Details: C:\Users\PC0\Desktop\XVR 3.0\slave\drmemory_log\DrMemory-PROG_SLAVE.exe.1708.000\results.txt

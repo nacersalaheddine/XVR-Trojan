@@ -1,0 +1,48 @@
+Dr. Memory version 1.11.0 build 2 built on Aug 29 2016 02:42:07
+Dr. Memory results for pid 3144: "PROG_MASTER.exe"
+Application cmdline: "bin/PROG_MASTER.exe"
+Recorded 115 suppression(s) from default C:\Program Files (x86)\Dr. Memory\bin\suppress-default.txt
+
+Error #1: UNINITIALIZED READ: reading register ecx
+# 0 MSWSOCK.dll!Tcpip4_WSHGetSocketInformation  +0x40d9   (0x72fc1329 <MSWSOCK.dll+0x11329>)
+# 1 WS2_32.dll!setsockopt                       +0x14d    (0x7593febe <WS2_32.dll+0xfebe>)
+# 2 server_Create                                [source/server.c:66]
+# 3 main_cmd                                     [source/main.c:97]
+# 4 main                                         [source/main.c:192]
+Note: @0:00:02.850 in thread 8464
+Note: instruction: test   %ecx %ecx
+
+Error #2: LEAK 3 direct bytes 0x02bd2ba8-0x02bd2bab + 0 indirect bytes
+# 0 replace_malloc                        [d:\drmemory_package\common\alloc_replace.c:2576]
+# 1 net_ReceiveDataTimeout                [source/net/interface.c:132]
+# 2 command_hdd_Ls                        [source/cmd/hdd/ls.c:156]
+# 3 commands_find                         [source/cmd/commands.c:203]
+# 4 commands_Translate                    [source/cmd/commands.c:220]
+# 5 server_ConnectionHandle               [source/server.c:214]
+# 6 main_cmd                              [source/main.c:121]
+# 7 main                                  [source/main.c:192]
+
+===========================================================================
+FINAL SUMMARY:
+
+DUPLICATE ERROR COUNTS:
+
+SUPPRESSIONS USED:
+
+ERRORS FOUND:
+      0 unique,     0 total unaddressable access(es)
+      1 unique,     1 total uninitialized access(es)
+      0 unique,     0 total invalid heap argument(s)
+      0 unique,     0 total GDI usage error(s)
+      0 unique,     0 total handle leak(s)
+      0 unique,     0 total warning(s)
+      1 unique,     1 total,      3 byte(s) of leak(s)
+      0 unique,     0 total,      0 byte(s) of possible leak(s)
+ERRORS IGNORED:
+      9 potential error(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.3144.000\potential_errors.txt)
+      1 potential leak(s) (suspected false positives)
+         (details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.3144.000\potential_errors.txt)
+     46 unique,    46 total,  17238 byte(s) of still-reachable allocation(s)
+         (re-run with "-show_reachable" for details)
+Details: C:\Users\PC0\Desktop\XVR 3.0\master\drmemory_log\DrMemory-PROG_MASTER.exe.3144.000\results.txt
