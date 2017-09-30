@@ -20,6 +20,7 @@
 #define COMMANDS_HDD_CD 14
 #define COMMANDS_REMOVE 15
 #define COMMANDS_DISK_LIST 16
+#define COMMANDS_SCREEN_IS_USING_COMPRESSOR 17
 
 #define COMMANDS_SUCC 1
 #define COMMANDS_UNKNOW_COMMAND -9
@@ -39,5 +40,6 @@ extern int command_hdd_Ls(unsigned char* msg);
 extern int command_hdd_Cd(unsigned char* msg);
 extern int command_Remove(unsigned char* msg);
 extern int command_Desk_list(void);
+extern int command_Screen_IsUsingCompressor(unsigned char* msg);
 
 #endif

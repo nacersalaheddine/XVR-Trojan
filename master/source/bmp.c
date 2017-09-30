@@ -5,6 +5,33 @@
 #include "logger.h"
 #include "bmp.h"
 
+void bmp_UncompressData(OUT_USTRP data, int width, int height)
+{
+	int ndataLen = (height * (width * 3)) + sizeof(uint8);
+	uint32 ndataIndex = 0;
+	uint32 odataIndex = 0;
+	uint8* ndata = malloc(ndataLen);
+	uint8* odata = *data;
+	memset(ndata, 0, ndataLen);
+
+	int mx;
+	int my;
+
+	for(my = 0; my != height; my++)
+	{
+		for(mx = 0; mx != width; mx++)
+		{
+			ndata[ndataIndex++] = odata[odataIndex++];
+			ndata[ndataIndex++] = odata[odataIndex++];
+			ndata[ndataIndex] = ndata[ndataIndex - 1];
+			ndataIndex++;
+		}
+	}
+
+	free(odata);
+	*data = ndata;
+}
+
 int bmp_Create(char* fname, void* data, int width, int height, int hidden)
 {
 	BITMAP_INFO_HEADER bmpInfo = { sizeof(BITMAP_INFO_HEADER) };

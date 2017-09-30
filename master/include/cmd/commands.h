@@ -20,8 +20,9 @@
 #define COMMANDS_HDD_CD 14
 #define COMMANDS_REMOVE 15
 #define COMMANDS_DISK_LIST 16
+#define COMMANDS_SCREEN_IS_USING_COMPRESSOR 17
 
-#define COMMANDS_TOTAL_COMMANDS 17
+#define COMMANDS_TOTAL_COMMANDS 18
 
 #define COMMANDS_ARGS_SEP ','
 #define COMMANDS_UNKNOW_COMMAND -9
@@ -46,5 +47,6 @@ extern int command_hdd_Ls_Arg(char* msg, int len);
 extern int command_hdd_Cd(char* msg, int len);
 extern int command_Remove(char* msg, int len);
 extern int command_Disk_list(void);
+extern int command_Screen_IsUsingCompressor(char* msg, int len);
 
 #endif

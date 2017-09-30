@@ -3,6 +3,7 @@
 
 extern void screenshot_Init();
 extern void screenshot_Calculate(double mX, double mY, int* width, int* height);
+extern void screenshot_CompressData(unsigned char** data, unsigned int* dataLen, int width, int height);
 extern unsigned char* screenshot_Take(double mX, double mY, int* width, int* height);
 
 #endif

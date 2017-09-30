@@ -7,6 +7,7 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "cmd/commands.h"
+#include "cmd/screen.h"
 
 int client_connected = 0;
 int client_timeout = 1000;
@@ -60,6 +61,7 @@ void client_Connect(void)
 		exit(0);
 	}
 
+	screen_isUsingCompressor = 0;
 	while(connect(client_Socket, (SOCKADDR*)&client_SocketAddr, sizeof(client_SocketAddr)) < 0){}
 
 	ioctlsocket(client_Socket, FIONBIO, &client_io_nonBlock);

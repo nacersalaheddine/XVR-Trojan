@@ -6,6 +6,7 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "screenshot.h"
+#include "cmd/screen.h"
 
 #define COMMAND_SCREEN_CAP_DATA 0xA3
 #define COMMAND_SCREEN_CAP_END 0xD3
@@ -24,6 +25,12 @@ int command_Screen_Capture(uint8* msg)
 	screenshot_Calculate(_scWidth, _scHeight, &scWidth, &scHeight);
 
 	uint32 size = scWidth * scHeight * 3;
+
+	if(screen_isUsingCompressor)
+	{
+		size = scWidth * scHeight * 2;
+	}
+
 	uint8 s_size[9];
 	s_size[0] = (scWidth) & 0xFF;
 	s_size[1] = (scWidth >> 8) & 0xFF;
@@ -76,6 +83,11 @@ int command_Screen_Capture(uint8* msg)
 			{
 				return NET_LOST_CONNECTION;
 			}
+		}
+
+		if(screen_isUsingCompressor)
+		{
+			screenshot_CompressData(&screenData, &size, scWidth, scHeight);
 		}
 
 		for(i = 0; i != size; i++)

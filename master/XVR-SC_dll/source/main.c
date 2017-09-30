@@ -120,6 +120,7 @@ void SC_DestroyWindow(void)
 	sc_slave = NULL;
 	sc_screen = NULL;
 
+	SDL_Delay(500); //fixes for me the crash when closing...
 	SDL_Quit();
 
 	sc_stopped = 1;
@@ -168,13 +169,10 @@ int SC_Loop(void* args)
 			}
 		}
 
-		if(sc_running)
-		{
-			SC_Update();
-			SC_Draw();
-			SDL_UpdateWindowSurface(sc_window);
-			SC_CapFPS();
-		}
+		SC_Update();
+		SC_Draw();
+		SDL_UpdateWindowSurface(sc_window);
+		SC_CapFPS();
 	}
 
 	SC_DestroyWindow();

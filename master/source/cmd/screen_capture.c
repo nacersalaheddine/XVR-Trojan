@@ -5,6 +5,7 @@
 #include "types.h"
 #include "logger.h"
 #include "cmd/commands.h"
+#include "cmd/screen.h"
 #include "net/interface.h"
 #include "net/error.h"
 #include "bmp.h"
@@ -189,12 +190,24 @@ int command_Screen_Capture(char* msg, int len)
 
 	scWidth = (rmsg[1] & 0xFF) | (rmsg[2] & 0xFF) << 8 | (rmsg[3] & 0xFF) << 16 | (rmsg[4] & 0xFF) << 24;
 	scHeight = (rmsg[5] & 0xFF) | (rmsg[6] & 0xFF) << 8 | (rmsg[7] & 0xFF) << 16 | (rmsg[8] & 0xFF) << 24;
-	uint32 size = scWidth * scHeight * 3;
 	free(rmsg);
 
 	LOG(LOG_INFO, "Stream width: %d\n", scWidth);
 	LOG(LOG_INFO, "Stream height: %d\n", scHeight);
-	LOG(LOG_INFO, "Frame size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+
+	uint32 size = scWidth * scHeight * 3;
+
+	if(screen_isUsingCompressor)
+	{
+		LOG(LOG_INFO, "Frame original size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+		
+		size = scWidth * scHeight * 2;
+
+		LOG(LOG_INFO, "Frame compressed size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+	}else{
+		LOG(LOG_INFO, "Frame size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+	}
+
 	LOG(LOG_INFO, "Interval: %d\n", interval);
 	LOG(LOG_INFO, "Hold \"ESC\" to stop capturing!\n");	
 
@@ -315,6 +328,11 @@ int command_Screen_Capture(char* msg, int len)
 
 		fclose(f);
 		remove(COMMAND_SCREEN_CAP_TEMP_FILE);
+
+		if(screen_isUsingCompressor)
+		{
+			bmp_UncompressData(&imageData, scWidth, scHeight);
+		}
 
 		bmp_Create("ScreenCap.bmp", imageData, scWidth, scHeight, 1);
 		frames++;

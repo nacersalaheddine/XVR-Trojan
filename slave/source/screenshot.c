@@ -35,6 +35,34 @@ void screenshot_Calculate(double mX, double mY, OUT_INT width, OUT_INT height)
 	*height = scHeight;
 }
 
+//from RGB to RG
+void screenshot_CompressData(OUT_USTRP data, OUT_UINT dataLen, int width, int height)
+{
+	int ndataLen = (height * (width * 2)) + sizeof(uint8);
+	uint32 ndataIndex = 0;
+	uint32 odataIndex = 0;
+	uint8* ndata = malloc(ndataLen);
+	uint8* odata = *data;
+	memset(ndata, 0, ndataLen);
+
+	int mx;
+	int my;
+
+	for(my = 0; my != height; my++)
+	{
+		for(mx = 0; mx != width; mx++)
+		{
+			ndata[ndataIndex++] = odata[odataIndex++];
+			ndata[ndataIndex++] = odata[odataIndex++];
+			odataIndex++;
+		}
+	}
+
+	free(odata);
+	*data = ndata;
+	*dataLen = ndataLen - 1;
+}
+
 uint8* screenshot_Take(double mX, double mY, OUT_INT width, OUT_INT height)
 {
 	if(mX <= 1 || mY <= 1)

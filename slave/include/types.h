@@ -10,6 +10,7 @@ typedef char** OUT_STRP;
 typedef int* OUT_INT;
 
 typedef uint8** OUT_USTRP;
+typedef uint32* OUT_UINT;
 
 #define UINT64_MAX 0xFFFFFF
 

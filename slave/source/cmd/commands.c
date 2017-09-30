@@ -41,6 +41,8 @@ int commands_find(int cmd, uint8* msg)
 		return command_Remove(msg);
 	}else if(cmd == COMMANDS_DISK_LIST){
 		return command_Desk_list();
+	}else if(cmd == COMMANDS_SCREEN_IS_USING_COMPRESSOR){
+		return command_Screen_IsUsingCompressor(msg);
 	}
 	
 	return 0;

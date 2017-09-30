@@ -12,9 +12,6 @@
 #define MAIN_CMD_UNKNOWN 0
 #define MAIN_CMD_GOOD 1
 
-//@NAPRAVI dovurshi ostanalite dve komanda i za desert napravi infektora
-//@VAJNO za budishtiq men! -: ako ima krashove na komandite poigray si s rmsg, che osvobojdava pamet koqto ne e neq tey shte e may
-
 int main_cmd(char* msg, int msgLen)
 {
 	msgLen--; 

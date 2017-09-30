@@ -6,6 +6,7 @@
 #include "input.h"
 #include "types.h"
 #include "cmd/commands.h"
+#include "cmd/screen.h"
 #include "net/interface.h"
 #include "net/error.h"
 
@@ -123,6 +124,7 @@ int server_WaitForSlave(void)
 
 		setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, _val1, sizeof(int));		
 		setsockopt(server_Client, SOL_SOCKET, SO_RCVTIMEO, (char*)&server_timeout, sizeof(server_timeout));
+		screen_isUsingCompressor = 0;
 
 		LOG(LOG_SUCC, "%s has connected!\n", inet_ntoa(server_ClientAddr.sin_addr));
 		SCL_ResetSeed();

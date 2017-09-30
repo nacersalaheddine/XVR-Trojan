@@ -8,6 +8,7 @@
 #include "net/error.h"
 #include "progressbar.h"
 #include "bmp.h"
+#include "cmd/screen.h"
 
 #define COMMAND_SCREEN_GET_DATA 0x6
 #define COMMAND_SCREEN_GET_END 0xB
@@ -103,12 +104,24 @@ int command_Screen_Get(char* msg, int len)
 
 	scWidth = (rmsg[1] & 0xFF) | (rmsg[2] & 0xFF) << 8 | (rmsg[3] & 0xFF) << 16 | (rmsg[4] & 0xFF) << 24;
 	scHeight = (rmsg[5] & 0xFF) | (rmsg[6] & 0xFF) << 8 | (rmsg[7] & 0xFF) << 16 | (rmsg[8] & 0xFF) << 24;
-	uint32 size = scWidth * scHeight * 3;
 	free(rmsg);
-
+	
 	LOG(LOG_INFO, "Image width: %d\n", scWidth);
 	LOG(LOG_INFO, "Image height: %d\n", scHeight);
-	LOG(LOG_INFO, "Image size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+
+	uint32 size = scWidth * scHeight * 3;
+
+	if(screen_isUsingCompressor)
+	{
+		LOG(LOG_INFO, "Image original size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");				
+		
+		size = scWidth * scHeight * 2;
+
+		LOG(LOG_INFO, "Image compressed size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+	}else{
+		LOG(LOG_INFO, "Image size: %d %s\n", (size / 1024) < 1 ? size : size / 1024, (size / 1024) < 1 ? "B" : "KB");
+	}
+		
 	LOG(LOG_INFO, "Image BPP: 24\n");
 
 	LOG(LOG_INFO, "Creating temp file %s\n", COMMAND_SCREEN_GET_TEMP_FILE);
@@ -203,6 +216,13 @@ int command_Screen_Get(char* msg, int len)
 
 	fclose(f);
 	remove(COMMAND_SCREEN_GET_TEMP_FILE);
+
+	if(screen_isUsingCompressor)
+	{
+		LOG(LOG_INFO, "Uncompressing data...\n");
+
+		bmp_UncompressData(&imageData, scWidth, scHeight);
+	}
 
 	bmp_Create(fpath, imageData, scWidth, scHeight, 0);
 	
