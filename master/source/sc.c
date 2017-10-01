@@ -88,8 +88,26 @@ int SC_loadFunctions(void)
 	return 1;
 }
 
+void SC_FreeLibrary(void)
+{
+	if(!sc_dll)
+	{
+		return;
+	}
+
+	if(!FreeLibrary(sc_dll))
+	{
+		LOG(LOG_ERR, "Failed to unload \"%s\"", SC_LIB_XVR_SC);
+	}
+}
+
 void SC_LoadLibrary(void)
 {
+	if(sc_dll)
+	{
+		SC_FreeLibrary();
+	}
+
 	LOG(LOG_INFO, "Searching for \"%s\"\n", SC_LIB_SDL2);
 
 	FILE *f = fopen(SC_LIB_SDL2, "r");
@@ -135,18 +153,5 @@ void SC_LoadLibrary(void)
 		}else{
 			LOG(LOG_ERR, "Failed to load \"%s\"\n", SC_LIB_XVR_SC);
 		}
-	}
-}
-
-void SC_FreeLibrary(void)
-{
-	if(!SC_CanRun)
-	{
-		return;
-	}
-
-	if(!FreeLibrary(sc_dll))
-	{
-		LOG(LOG_ERR, "Failed to \"%s\"", SC_LIB_XVR_SC);
 	}
 }
