@@ -18,10 +18,10 @@ the master will generate "xvr_colors.cfg" if he can't find it, and if don't like
 
 Here are some images
 
-  ![Alt text](image1.png)
+  ![Alt text](1.png)
 
-  ![Alt text](image2.png)
+  ![Alt text](2.png)
   
-  ![Alt text](image3.png)
+  ![Alt text](3.png)
   
-  ![Alt text](image4.png)
+  ![Alt text](4.png)
