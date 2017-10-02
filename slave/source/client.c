@@ -91,7 +91,6 @@ void client_ConnectionHandle(void)
 
 			if(rv == NET_LOST_CONNECTION)
 			{
-				puts("LOST CON!");
 				client_Disconnect();
 				free(rmsg);
 				
@@ -107,8 +106,6 @@ void client_ConnectionHandle(void)
 
 			ioctlsocket(client_Socket, FIONBIO, &client_io_block);
 			setsockopt(client_Socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&client_timeout, sizeof(client_timeout));
-
-			puts("RECV");
 
 			rv = commands_Translate(rmsg);
 			free(rmsg);
