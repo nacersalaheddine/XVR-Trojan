@@ -74,6 +74,17 @@ void client_ConnectionHandle(void)
 	int rv = 0;
 	FD_SET fd;
 	uint8 *rmsg;
+	uint64 buffLen = 124;
+	char buff[124 + 1];
+	memset(buff, 0, 124 + 1);
+	
+	if(GetUserName(buff, &buffLen))
+	{
+		if(net_SendData((uint8*)buff, buffLen) == NET_LOST_CONNECTION)
+		{
+			return;
+		}
+	}
 
 	while(client_connected == 1)
 	{

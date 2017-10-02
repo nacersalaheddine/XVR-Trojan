@@ -9,6 +9,7 @@
 #include "input.h"
 #include "SCL.h"
 #include "sc/sc.h"
+#include "geoIP.h"
 
 #define MAIN_CMD_BREAK -1
 #define MAIN_CMD_UNKNOWN 0
@@ -40,12 +41,12 @@ int main_cmd(char* msg, int msgLen)
 		LOG(LOG_INFO, "  whitelist clear       #clears the whitelist data\n");
 		LOG(LOG_INFO, "  whitelist count       #displays how many IPs are loaded\n");
 		LOG(LOG_INFO, "  whitelist turn on/off #turn whitelist on of off\n");
+		LOG(LOG_INFO, "  geoip turn on/off     #turn geoip on of off\n");
 		LOG(LOG_INFO, "  reload all            #tries to reload the program\n");
 		LOG(LOG_INFO, "  reload sc             #tries to reload SC\n");
 		LOG(LOG_INFO, "  reload whitelist      #tries to reload whitelist data\n");
 		LOG(LOG_INFO, "  reload blocklist      #tries to reload blocklist data\n");
 		LOG(LOG_INFO, "  start                 #starts the master\n");
-		LOG(LOG_INFO, "  start list            #starts the master with list of connections\n");
 
 		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "stop") == 0){
@@ -199,6 +200,22 @@ int main_cmd(char* msg, int msgLen)
 		LOG(LOG_INFO, "Whitelist is turned off!\n");
 
 		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "geoip turn on") == 0){
+		
+		if(geoIP_Init() == GEOIP_NO_ERROR)
+		{
+			LOG(LOG_INFO, "Geoip is turned on!\n");
+		}else{
+			LOG(LOG_ERR, "Failed to turn on GeoIP!\n");
+		}
+
+		return MAIN_CMD_GOOD;
+	}else if(strcmp(msg, "geoip turn off") == 0){
+		geoIP_IsInUse = 0;
+
+		LOG(LOG_INFO, "GeoIP is turned off!\n");
+
+		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "scl info") == 0){
 		SCL_PrintInfo();
 
@@ -222,41 +239,6 @@ int main_cmd(char* msg, int msgLen)
 
 		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "start") == 0){
-		LOG(LOG_INFO, "Creating the server...\n");
-
-		rv = server_Create();
-
-		if(rv != SERVER_NO_ERROR)
-		{
-			LOG(LOG_ERR, "Error when creating the server: %d\n", rv);
-			LOG(LOG_ERR, "WSA Error: %d\n", WSAGetLastError());
-			LOG(LOG_ERR, "Error: %d\n", GetLastError());
-	
-			return MAIN_CMD_BREAK;
-		}
-
-		LOG(LOG_SUCC, "Server created!\n");
-
-		rv = server_WaitForSlave();
-
-		if(rv != SERVER_NO_ERROR && rv != SERVER_ERROR_NO_SLAVE)
-		{
-			LOG(LOG_ERR, "Error when searching for slaves: %d\n", rv);
-			LOG(LOG_ERR, "WSA Error: %d\n", WSAGetLastError());
-			LOG(LOG_ERR, "Error: %d\n", GetLastError());
-	
-			return MAIN_CMD_BREAK;
-		}
-
-		if(rv == SERVER_NO_ERROR)
-		{
-			server_ConnectionHandle();
-		}
-
-		LOG(LOG_INFO, "Server stoped!\n");
-
-		return MAIN_CMD_GOOD;
-	}else if(strcmp(msg, "start list") == 0){
 		LOG(LOG_INFO, "Creating the server...\n");
 
 		rv = server_Create();
@@ -321,6 +303,8 @@ int main(int argc, char* args[])
 				log_Color = 1;
 			}else if(strcmp(args[i], "-Time") == 0){
 				log_Time = 1;
+			}else if(strcmp(args[i], "-GeoIP") == 0){
+				geoIP_IsInUse = 1;
 			}
 		}
 	}
@@ -351,6 +335,20 @@ int main(int argc, char* args[])
 	}
 
 	LOG(LOG_SUCC, "WSA Started!\n");
+
+	if(geoIP_IsInUse)
+	{
+		LOG(LOG_INFO, "Preparing GeoIP\n");
+
+		rv = geoIP_Init();
+
+		if(rv != GEOIP_NO_ERROR)
+		{
+			LOG(LOG_ERR, "Failed to prepare GeoIP!\n");
+		}else{
+			LOG(LOG_SUCC, "Prepared!\n");
+		}
+	}
 
 	rv = MAIN_CMD_BREAK;
 	char* m_in;

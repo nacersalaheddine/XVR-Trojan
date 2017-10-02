@@ -11,6 +11,7 @@
 #include "net/error.h"
 #include "whitelist.h"
 #include "blocklist.h"
+#include "geoIP.h"
 
 int server_ClientListSize = 0;
 int server_isSendingCmd = 0;
@@ -100,11 +101,11 @@ int server_Create(void)
 {
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-	char _val1[1] = { 1 };
+	int _val1 = 1;
 
-	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, _val1, sizeof(int));
+	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR,(char*)&_val1, sizeof(_val1));
 	setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&server_timeout, sizeof(server_timeout));
-	setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, _val1, sizeof(int));
+	setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, (char*)&_val1, sizeof(_val1));
 
 	server_socketAddr.sin_addr.s_addr = INADDR_ANY;
 	server_socketAddr.sin_family = AF_INET;
@@ -266,118 +267,89 @@ int server_WaitForSlavesAndChoise(void)
 				free(cip);
 			}
 
-			LOG(LOG_INFO, " ");
+			int sn_rv;
+			uint8* slaveName;
+			ioctlsocket(server_socket, FIONBIO, &server_io_block);
+			ioctlsocket(server_TempClient, FIONBIO, &server_io_block);
+			SCL_ResetSeed();
 
-			if(server_ClientListSize + 1 > 99)
+			server_Client = server_TempClient;
+
+			sn_rv = net_ReceiveDataTimeout(&slaveName, SERVER_SLAVENAME_TIMER);
+			
+			if(sn_rv == NET_LOST_CONNECTION)
 			{
-				printf("%d  %s\n", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));			
-			}else if(server_ClientListSize + 1 > 9){
-				printf(" %d  %s\n", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
+				free(slaveName);
 			}else{
-				printf("  %d  %s\n", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
+				LOG(LOG_INFO, " ");
+
+				if(sn_rv == NET_TIMED_OUT)
+				{
+					if(server_ClientListSize + 1 > 99)
+					{
+						printf("%d  %s (", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
+					}else if(server_ClientListSize + 1 > 9){
+						printf(" %d  %s (", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
+					}else{
+						printf("  %d  %s (", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
+					}
+
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						printf("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+						putchar(')');
+					}else{
+						printf("UNKNOWN)");
+					}
+				}else{
+					if(server_ClientListSize + 1 > 99)
+					{
+						printf("%d  %s (%s)", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr), slaveName);
+					}else if(server_ClientListSize + 1 > 9){
+						printf(" %d  %s (%s)", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr), slaveName);
+					}else{
+						printf("  %d  %s (%s)", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr), slaveName);
+					}
+				}
+	
+				if(geoIP_IsInUse)
+				{
+					char* geoName;
+
+					printf(" (");
+
+					if(geoIP_CheckIP(inet_ntoa(server_TempClientAddr.sin_addr), &geoName) != GEOIP_NO_ERROR)
+					{
+						if(log_Color)
+						{
+							LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+							printf("UNKNOWN");
+							LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+							putchar(')');
+						}else{
+							printf("UNKNOWN)");
+						}
+					}else{
+						printf("%s)", geoName);
+					}
+
+					free(geoName);
+				}
+
+				putchar('\n');
+
+				server_ClientList[server_ClientListSize] = server_TempClient;
+				server_ClientAddrList[server_ClientListSize++] = server_TempClientAddr;
 			}
+			
+			free(slaveName);
 
-			server_ClientList[server_ClientListSize] = server_TempClient;
-			server_ClientAddrList[server_ClientListSize++] = server_TempClientAddr;
+			ioctlsocket(server_socket, FIONBIO, &server_io_nonBlock);
+			ioctlsocket(server_TempClient, FIONBIO, &server_io_nonBlock);
+			server_Client = INVALID_SOCKET;
 		}
-	}
-
-	ioctlsocket(server_socket, FIONBIO, &server_io_block);
-
-	return -1;
-}
-
-int server_WaitForSlave(void)
-{
-	if(listen(server_socket, SOMAXCONN) != 0)
-	{
-		WSACleanup();
-
-		return SERVER_ERROR_LISTEN;
-	}
-
-	ioctlsocket(server_socket, FIONBIO, &server_io_nonBlock);	
-
-	if(whitelist_IsInUse)
-	{
-		int _count = whitelist_Count();
-
-		LOG(LOG_INFO, "IPs to allow: %d\n", _count);
-	}
-
-	if(blocklist_IsInUse)
-	{
-		int _count = blocklist_Count();
-		
-		LOG(LOG_INFO, "IPs to block: %d\n", _count);
-	}
-
-	LOG(LOG_INFO, "Waiting for connection on port %d\n", server_UsingPort);
-	LOG(LOG_INFO, "Hold \"ESC\" to stop listening!\n");
-
-	while(1)
-	{
-		int _addrsize = sizeof(server_ClientAddr);
-		
-		while((server_Client = accept(server_socket, (SOCKADDR*)&server_ClientAddr, &_addrsize)) == INVALID_SOCKET)
-		{
-			if((GetKeyState(VK_ESCAPE) < 0))
-			{
-				ioctlsocket(server_socket, FIONBIO, &server_io_block);
-				server_CloseConnection();
-
-				return SERVER_ERROR_NO_SLAVE;
-			}
-
-			Sleep(500);
-		}
-
-		if(whitelist_IsInUse)
-		{
-			char* cip = inet_ntoa(server_ClientAddr.sin_addr);
-
-			if(whitelist_IsKnown(cip) != WHITELIST_ERROR_HAS)
-			{
-				free(cip);
-				shutdown(server_Client, SD_BOTH);
-				closesocket(server_Client);
-				server_Client = INVALID_SOCKET;
-
-				continue;
-			}
-
-			free(cip);
-		}
-
-		if(blocklist_IsInUse)
-		{
-			char* cip = inet_ntoa(server_ClientAddr.sin_addr);
-
-			if(blocklist_IsBlocked(cip) == BLOCKLIST_ERROR_HAS)
-			{
-				free(cip);
-				shutdown(server_Client, SD_BOTH);
-				closesocket(server_Client);
-				server_Client = INVALID_SOCKET;
-
-				continue;
-			}
-
-			free(cip);
-		}
-
-		char _val1[1] = { 1 };
-
-		ioctlsocket(server_socket, FIONBIO, &server_io_block);		
-		ioctlsocket(server_Client, FIONBIO, &server_io_block);
-		setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, _val1, sizeof(int));		
-		setsockopt(server_Client, SOL_SOCKET, SO_RCVTIMEO, (char*)&server_timeout, sizeof(server_timeout));
-		screen_isUsingCompressor = 0;
-
-		LOG(LOG_SUCC, "%s has connected!\n", inet_ntoa(server_ClientAddr.sin_addr));
-		SCL_ResetSeed();
-
-		return SERVER_NO_ERROR;
 	}
 
 	ioctlsocket(server_socket, FIONBIO, &server_io_block);

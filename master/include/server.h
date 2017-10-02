@@ -1,6 +1,7 @@
 #ifndef __SERVER_H
 #define __SERVER_H
 
+#define SERVER_SLAVENAME_TIMER 2
 #define SERVER_MAX_CLIENTS 20
 #define SERVER_PORT 2666
 #define SERVER_KEEPALIVE_INTERVAL 500
@@ -17,7 +18,6 @@ extern int server_UsingPort;
 extern int server_WsaInit(void);
 extern void server_Cleanup(void);
 extern int server_Create(void);
-extern int server_WaitForSlave(void);
 extern int server_WaitForSlavesAndChoise(void);
 extern void server_ConnectionHandle(void);
 extern void server_CloseConnection(void);
