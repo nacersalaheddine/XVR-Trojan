@@ -19,8 +19,6 @@ int SC_Start(void)
 	{
 		return 0;
 	}
-
-	LOG(LOG_INFO, "NOTE: SC is still under construction and may crash when its stops!\n");
 	
 	return _SC_Lib_Start();
 }

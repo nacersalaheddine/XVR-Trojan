@@ -223,9 +223,9 @@ void whitelist_Init(void)
 {
 	whitelist_Clear();
 
-	LOG(LOG_INFO, "Searching for \"xvr_whitelist\"\n");
+	LOG(LOG_INFO, "Searching for \"whitelist\"\n");
 
-	FILE *f = fopen("xvr_whitelist", "r");
+	FILE *f = fopen("whitelist", "r");
 
 	if(!f)
 	{

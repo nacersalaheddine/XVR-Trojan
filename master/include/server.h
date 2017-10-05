@@ -13,7 +13,10 @@
 #define SERVER_ERROR_LISTEN 3
 #define SERVER_ERROR_NO_SLAVE 4
 
-extern unsigned int server_Client;
+#include <windows.h>
+
+extern SOCKET server_Client;
+extern SOCKADDR_IN server_ClientAddr;
 extern int server_UsingPort;
 extern int server_WsaInit(void);
 extern void server_Cleanup(void);

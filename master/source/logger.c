@@ -15,14 +15,14 @@ uint16 log_colorPalette[LOG_COLOR_LIST_SIZE] = { 0x07, 0x0C, 0x0E, 0x0A, 0x0F, 0
 
 void LOG_LoadConfing(void)
 {
-	FILE *f = fopen("xvr_colors.cfg", "r");
+	FILE *f = fopen("colors.cfg", "r");
 
 	if(!f)
 	{
-		LOG(LOG_ERR, "Didn't find \"xvr_colors.cfg\"\n");
+		LOG(LOG_ERR, "Didn't find \"colors.cfg\"\n");
 		LOG(LOG_INFO, "Colors are set to default and saved!\n");
 
-		f = fopen("xvr_colors.cfg", "w");
+		f = fopen("colors.cfg", "w");
 		fprintf(f, "# The values are in 8 bit (255) like in CMD\n");
 		fprintf(f, "# example 0x0F is 16, background color is black and text color is white\n");
 		fprintf(f, "TIME=%d\n", log_colorPalette[LOG_COLOR_TIME]);
@@ -89,7 +89,7 @@ void LOG_LoadConfing(void)
 		}
 	}
 
-	LOG(LOG_SUCC, "Found \"xvr_colors.cfg\" and loaded!\n");
+	LOG(LOG_SUCC, "Found \"colors.cfg\" and loaded!\n");
 
 	fclose(f);
 }

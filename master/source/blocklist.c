@@ -223,9 +223,9 @@ void blocklist_Init(void)
 {
 	blocklist_Clear();
 
-	LOG(LOG_INFO, "Searching for \"xvr_blocklist\"\n");
+	LOG(LOG_INFO, "Searching for \"blocklist\"\n");
 
-	FILE *f = fopen("xvr_blocklist", "r");
+	FILE *f = fopen("blocklist", "r");
 
 	if(!f)
 	{

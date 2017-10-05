@@ -101,9 +101,9 @@ void SC_CapFPS(void)
 
 void SC_DestroyWindow(void)
 {
-	if(sc_window)
+	if(sc_slave)
 	{
-		SDL_DestroyWindow(sc_window);
+		SDL_FreeSurface(sc_slave);
 	}
 
 	if(sc_screen)
@@ -111,9 +111,9 @@ void SC_DestroyWindow(void)
 		SDL_FreeSurface(sc_screen);
 	}
 
-	if(sc_slave)
+	if(sc_window)
 	{
-		SDL_FreeSurface(sc_slave);
+		SDL_DestroyWindow(sc_window);
 	}
 
 	sc_window = NULL;

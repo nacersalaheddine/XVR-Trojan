@@ -201,7 +201,6 @@ int main_cmd(char* msg, int msgLen)
 
 		return MAIN_CMD_GOOD;
 	}else if(strcmp(msg, "geoip turn on") == 0){
-		
 		if(geoIP_Init() == GEOIP_NO_ERROR)
 		{
 			LOG(LOG_INFO, "Geoip is turned on!\n");
