@@ -30,6 +30,11 @@ int command_hdd_Cd(char* msg, int len)
 		}
 	}
 
+	if(msg[strlen(msg) - 2] == '\\')
+	{
+		msg[strlen(msg) - 1] = 0;
+	}
+
 	if(strcmp(msg, "..") == 0)
 	{
 		int countC = 0;
