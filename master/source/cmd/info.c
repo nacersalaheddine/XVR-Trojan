@@ -14,8 +14,9 @@
 #define COMMAND_INFO_SC_HEIGHT 0x13
 #define COMMAND_INFO_FW_PID 0x14
 #define COMMAND_INFO_FW_TITLE 0x15
+#define COMMAND_INFO_FW_EXECUTABLE 0x16
 
-#define COMMAND_INFO_COUNT 6
+#define COMMAND_INFO_COUNT 7
 
 int command_Info(void)
 {
@@ -48,7 +49,7 @@ int command_Info(void)
 			return NET_LOST_CONNECTION;
 		}
 
-		if(rmsg[1] >= COMMAND_INFO_USERNAME && rmsg[1] <= COMMAND_INFO_FW_TITLE)
+		if(rmsg[1] >= COMMAND_INFO_USERNAME && rmsg[1] <= COMMAND_INFO_FW_EXECUTABLE)
 		{
 			if(rmsg[1] == COMMAND_INFO_USERNAME)
 			{
@@ -146,6 +147,22 @@ int command_Info(void)
 					}
 				}else{
 					LOG(LOG_INFO, "Focused window title: %s\n", rmsg + 2);
+				}
+			}else if(rmsg[1] == COMMAND_INFO_FW_EXECUTABLE){
+				if(rmsg[0] == COMMANDS_DISAPPROVE)
+				{
+					LOG(LOG_INFO, "Focused exe: ");
+					
+					if(log_Color)
+					{
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
+						puts("UNKNOWN");
+						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
+					}else{
+						puts("UNKNOWN");
+					}
+				}else{
+					LOG(LOG_INFO, "Focused exe: %s\n", rmsg + 2);
 				}
 			}
 

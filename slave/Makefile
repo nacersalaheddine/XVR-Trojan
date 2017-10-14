@@ -1,6 +1,6 @@
-ARGS= -Wall -DNDEBUG -lws2_32 -lgdi32 -mwindows
-ARGS_C= -Wall -DNDEBUG -lws2_32 -lgdi32 -mconsole
-ARGS_ML= -ggdb -lws2_32 -lgdi32 -mconsole
+ARGS= -Wall -DNDEBUG -lws2_32 -lgdi32 -lpsapi -mwindows
+ARGS_C= -Wall -DNDEBUG -lws2_32 -lgdi32 -lpsapi -mconsole
+ARGS_ML= -ggdb -lws2_32 -lgdi32 -lpsapi -mconsole
 O_PATH= bin/PROG_SLAVE.exe
 PRG_NAME= PROG_SLAVE.exe
 SRC= $(wildcard source/*.c)

