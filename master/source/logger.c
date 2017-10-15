@@ -23,23 +23,21 @@ void LOG_LoadConfing(void)
 		LOG(LOG_INFO, "Colors are set to default and saved!\n");
 
 		f = fopen("colors.cfg", "w");
-		fprintf(f, "# The values are in 8 bit (255) like in CMD\n");
-		fprintf(f, "# example 0x0F is 16, background color is black and text color is white\n");
-		fprintf(f, "TIME=%d\n", log_colorPalette[LOG_COLOR_TIME]);
-		fprintf(f, "ERROR=%d\n", log_colorPalette[LOG_COLOR_ERROR]);
-		fprintf(f, "INFO=%d\n", log_colorPalette[LOG_COLOR_INFO]);
-		fprintf(f, "SUCC=%d\n", log_colorPalette[LOG_COLOR_SUCC]);
-		fprintf(f, "TEXT=%d\n", log_colorPalette[LOG_COLOR_TEXT]);
-		fprintf(f, "USERNAME=%d\n", log_colorPalette[LOG_COLOR_USERNAME]);
-		fprintf(f, "USERNAME_SEP=%d\n", log_colorPalette[LOG_COLOR_USERNAME_SEP]);
-		fprintf(f, "PRGS_DEFAULT=%d\n", log_colorPalette[LOG_COLOR_PRGS_DEFAULT]);
-		fprintf(f, "PRGS_HALF=%d\n", log_colorPalette[LOG_COLOR_PRGS_HALF]);
-		fprintf(f, "PRGS_FULL=%d\n", log_colorPalette[LOG_COLOR_PRGS_FULL]);
-		fprintf(f, "LS_FILE=%d\n", log_colorPalette[LOG_COLOR_LS_FILE]);
-		fprintf(f, "LS_FOLDER=%d\n", log_colorPalette[LOG_COLOR_LS_FOLDER]);
-		fprintf(f, "LS_UNWN=%d\n", log_colorPalette[LOG_COLOR_LS_UNWN]);
-		fprintf(f, "DISK_LIST_FIXED=%d\n", log_colorPalette[LOG_COLOR_DISK_LIST_FIXED]);
-		fprintf(f, "DISK_LIST_RMOVABLE=%d\n", log_colorPalette[LOG_COLOR_DISK_LIST_REMOVABLE]);
+		fprintf(f, "TIME=%X\n", log_colorPalette[LOG_COLOR_TIME]);
+		fprintf(f, "ERROR=%X\n", log_colorPalette[LOG_COLOR_ERROR]);
+		fprintf(f, "INFO=%X\n", log_colorPalette[LOG_COLOR_INFO]);
+		fprintf(f, "SUCC=%X\n", log_colorPalette[LOG_COLOR_SUCC]);
+		fprintf(f, "TEXT=%X\n", log_colorPalette[LOG_COLOR_TEXT]);
+		fprintf(f, "USERNAME=%X\n", log_colorPalette[LOG_COLOR_USERNAME]);
+		fprintf(f, "USERNAME_SEP=%X\n", log_colorPalette[LOG_COLOR_USERNAME_SEP]);
+		fprintf(f, "PRGS_DEFAULT=%X\n", log_colorPalette[LOG_COLOR_PRGS_DEFAULT]);
+		fprintf(f, "PRGS_HALF=%X\n", log_colorPalette[LOG_COLOR_PRGS_HALF]);
+		fprintf(f, "PRGS_FULL=%X\n", log_colorPalette[LOG_COLOR_PRGS_FULL]);
+		fprintf(f, "LS_FILE=%X\n", log_colorPalette[LOG_COLOR_LS_FILE]);
+		fprintf(f, "LS_FOLDER=%X\n", log_colorPalette[LOG_COLOR_LS_FOLDER]);
+		fprintf(f, "LS_UNWN=%X\n", log_colorPalette[LOG_COLOR_LS_UNWN]);
+		fprintf(f, "DISK_LIST_FIXED=%X\n", log_colorPalette[LOG_COLOR_DISK_LIST_FIXED]);
+		fprintf(f, "DISK_LIST_RMOVABLE=%X\n", log_colorPalette[LOG_COLOR_DISK_LIST_REMOVABLE]);
 
 		fclose(f);
 
@@ -57,35 +55,35 @@ void LOG_LoadConfing(void)
 
 		if(strncmp(str, "TIME=", 5) == 0)
 		{
-			log_colorPalette[LOG_COLOR_TIME] = atoi(str + 5);
+			log_colorPalette[LOG_COLOR_TIME] = strtol(str + 5, NULL, 16);
 		}else if(strncmp(str, "ERROR=", 6) == 0){
-			log_colorPalette[LOG_COLOR_ERROR] = atoi(str + 6);
+			log_colorPalette[LOG_COLOR_ERROR] = strtol(str + 6, NULL, 16);
 		}else if(strncmp(str, "INFO=", 5) == 0){
-			log_colorPalette[LOG_COLOR_INFO] = atoi(str + 5);
+			log_colorPalette[LOG_COLOR_INFO] = strtol(str + 5, NULL, 16);
 		}else if(strncmp(str, "SUCC=", 5) == 0){
-			log_colorPalette[LOG_COLOR_SUCC] = atoi(str + 5);
+			log_colorPalette[LOG_COLOR_SUCC] = strtol(str + 5, NULL, 16);
 		}else if(strncmp(str, "TEXT=", 5) == 0){
-			log_colorPalette[LOG_COLOR_TEXT] = atoi(str + 5);
+			log_colorPalette[LOG_COLOR_TEXT] = strtol(str + 5, NULL, 16);
 		}else if(strncmp(str, "USERNAME=", 9) == 0){
-			log_colorPalette[LOG_COLOR_USERNAME] = atoi(str + 9);
+			log_colorPalette[LOG_COLOR_USERNAME] = strtol(str + 9, NULL, 16);
 		}else if(strncmp(str, "USERNAME_SEP=", 13) == 0){
-			log_colorPalette[LOG_COLOR_USERNAME_SEP] = atoi(str + 13);
+			log_colorPalette[LOG_COLOR_USERNAME_SEP] = strtol(str + 13, NULL, 16);
 		}else if(strncmp(str, "PRGS_DEFAULT=", 13) == 0){
-			log_colorPalette[LOG_COLOR_PRGS_DEFAULT] = atoi(str + 13);
+			log_colorPalette[LOG_COLOR_PRGS_DEFAULT] = strtol(str + 13, NULL, 16);
 		}else if(strncmp(str, "PRGS_HALF=", 10) == 0){
-			log_colorPalette[LOG_COLOR_PRGS_HALF] = atoi(str + 10);
+			log_colorPalette[LOG_COLOR_PRGS_HALF] = strtol(str + 10, NULL, 16);
 		}else if(strncmp(str, "PRGS_FULL=", 10) == 0){
-			log_colorPalette[LOG_COLOR_PRGS_FULL] = atoi(str + 10);
+			log_colorPalette[LOG_COLOR_PRGS_FULL] = strtol(str + 10, NULL, 16);
 		}else if(strncmp(str, "LS_FILE=", 8) == 0){
-			log_colorPalette[LOG_COLOR_LS_FILE] = atoi(str + 8);
+			log_colorPalette[LOG_COLOR_LS_FILE] = strtol(str + 8, NULL, 16);
 		}else if(strncmp(str, "LS_FOLDER=", 10) == 0){
-			log_colorPalette[LOG_COLOR_LS_FOLDER] = atoi(str + 10);
+			log_colorPalette[LOG_COLOR_LS_FOLDER] = strtol(str + 10, NULL, 16);
 		}else if(strncmp(str, "LS_UNWN=", 8) == 0){
-			log_colorPalette[LOG_COLOR_LS_UNWN] = atoi(str + 8);
+			log_colorPalette[LOG_COLOR_LS_UNWN] = strtol(str + 8, NULL, 16);
 		}else if(strncmp(str, "DISK_LIST_FIXED=", 16) == 0){
-			log_colorPalette[LOG_COLOR_DISK_LIST_FIXED] = atoi(str + 16);
+			log_colorPalette[LOG_COLOR_DISK_LIST_FIXED] = strtol(str + 16, NULL, 16);
 		}else if(strncmp(str, "DISK_LIST_RMOVABLE=", 19) == 0){
-			log_colorPalette[LOG_COLOR_DISK_LIST_REMOVABLE] = atoi(str + 19);
+			log_colorPalette[LOG_COLOR_DISK_LIST_REMOVABLE] = strtol(str + 19, NULL, 16);
 		}
 	}
 
