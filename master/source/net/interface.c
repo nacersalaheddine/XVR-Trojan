@@ -89,6 +89,15 @@ int net_ReceiveData(OUT_USTRP msg)
 	SCL_Decrypt(&rbuff, NET_BUFFSIZE);
 
 	int len = (rbuff[0] & 0xFF) | (rbuff[1] & 0xFF) << 8;
+
+	if(len > NET_BUFFSIE_MAX_CONTENT)
+	{
+		free(rbuff);
+		*msg = NULL;
+
+		return NET_LOST_CONNECTION;
+	}
+
 	uint8* buff = malloc(len + sizeof(uint8));
 	memset(buff, 0, len + sizeof(uint8));
 	memmove(buff, rbuff + 2, len);
@@ -129,6 +138,15 @@ int net_ReceiveDataTimeout(OUT_USTRP msg, int tries)
 	SCL_Decrypt(&rbuff, NET_BUFFSIZE);
 
 	int len =  (rbuff[0] & 0xFF) | (rbuff[1] & 0xFF) << 8;
+
+	if(len > NET_BUFFSIE_MAX_CONTENT)
+	{
+		free(rbuff);
+		*msg = NULL;
+
+		return NET_LOST_CONNECTION;
+	}
+
 	uint8* buff = malloc(len + sizeof(uint8));
 	memset(buff, 0, len + sizeof(uint8));
 	memmove(buff, rbuff + 2, len);
