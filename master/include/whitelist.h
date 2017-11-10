@@ -22,5 +22,6 @@ extern int whitelist_RemoveAt(int idx);
 extern void whitelist_PrintList(int page);
 extern int whitelist_IsKnown(char* cip);
 extern void whitelist_Clear(void);
+extern void whitelist_StoreAll(void);
 
 #endif

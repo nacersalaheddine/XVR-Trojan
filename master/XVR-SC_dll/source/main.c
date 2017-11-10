@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include "sc.h"
 #include "sc_error.h"
 #include "types.h"
-
-int sc_updateInterval = 1000;
-double sc_updateTimer = 0;
 
 int sc_loopLastError = 0;
 int sc_stopped = 1;
@@ -20,6 +18,50 @@ SDL_Rect sc_screenRect;
 uint32 sc_firstTicks = 0;
 uint32 sc_secondTicks = 0;
 
+int sc_isUpdating = 0;
+int sc_isDrawing = 0;
+
+void SC_SetImage(uint8* data, uint32 len)
+{
+	if(!sc_running || sc_stopped)
+	{
+		return;
+	}
+	
+	while(sc_isDrawing){}
+
+	sc_isUpdating = 1;
+	SDL_RWops* io = SDL_RWFromMem(data, len);
+
+	if(!io)
+	{
+		sc_isUpdating = 0;
+
+		return;
+	}
+
+	if(sc_slave)
+	{
+		SDL_FreeSurface(sc_slave);
+	}
+
+	sc_slave = SDL_LoadBMP_RW(io, 1);
+	SDL_RWclose(io);
+
+	if(!sc_slave)
+	{
+		sc_isUpdating = 0;
+
+		return;
+	}
+
+	sc_slaveRect = sc_slave->clip_rect;
+	sc_slaveRect.x = 0;
+	sc_slaveRect.y = 0;
+
+	sc_isUpdating = 0;
+}
+
 int SC_GetLoopLastError(void)
 {
 	return sc_loopLastError;
@@ -27,26 +69,7 @@ int SC_GetLoopLastError(void)
 
 void SC_Update(void)
 {
-	sc_updateTimer += SC_UPDATE_TIMER_VALUE * sc_secondTicks;
 
-	if(sc_updateTimer >= sc_updateInterval)
-	{
-		sc_updateTimer = 0.0;
-
-		if(sc_slave)
-		{
-			SDL_FreeSurface(sc_slave);
-		}
-
-		sc_slave = SDL_LoadBMP(SC_SCREEN_IMAGE);
-
-		if(sc_slave)
-		{
-			sc_slaveRect = sc_slave->clip_rect;
-			sc_slaveRect.x = 0;
-			sc_slaveRect.y = 0;
-		}
-	}
 }
 
 void SC_Draw(void)
@@ -55,7 +78,10 @@ void SC_Draw(void)
 
 	if(sc_slave)
 	{
-		SDL_BlitScaled(sc_slave, &sc_slaveRect, sc_screen, &sc_screenRect);		
+		while(sc_isUpdating){}
+		sc_isDrawing = 1;
+		SDL_BlitScaled(sc_slave, &sc_slaveRect, sc_screen, &sc_screenRect);
+		sc_isDrawing = 0;
 	}
 }
 
@@ -159,6 +185,8 @@ int SC_Loop(void* args)
 			if(event.type == SDL_QUIT)
 			{
 				sc_running = 0;
+				
+				while(sc_isUpdating){};
 
 				break;
 			}else if(event.type == SDL_WINDOWEVENT){
@@ -181,16 +209,6 @@ int SC_Loop(void* args)
 	sc_stopped = 1;
 
 	return 0;
-}
-
-void SC_SetInterval(int interval)
-{
-	sc_updateInterval = interval;
-	
-	if(sc_updateInterval < 1)
-	{
-		sc_updateInterval = 1;
-	}
 }
 
 int SC_Start(void)

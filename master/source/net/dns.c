@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "types.h"
 
-uint64 net_Dns_GetIp(char* hostname)
+uint32 net_Dns_GetIp(char* hostname)
 {
 	struct hostent *rhost = gethostbyname(hostname);
 
@@ -10,5 +10,5 @@ uint64 net_Dns_GetIp(char* hostname)
 		return 0;
 	}
 
-	return *(uint64*)rhost->h_addr_list[0];
+	return *(uint32*)rhost->h_addr_list[0];
 }

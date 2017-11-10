@@ -1,1 +1,1 @@
-bin\PROG_SLAVE.exe
+bin\SLAVE.exe

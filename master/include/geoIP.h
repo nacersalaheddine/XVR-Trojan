@@ -10,6 +10,8 @@
 #define GEOIP_ERROR_RECV 6
 #define GEOIP_ERROR_FAILED 7
 
+#define GEOIP_OPT_USE "-geoip"
+
 #define GEOIP_BUFFER 2048
 #define GEOIP_IP "freegeoip.net"
 #define GEOIP_PORT 80

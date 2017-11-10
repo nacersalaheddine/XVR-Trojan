@@ -2,37 +2,9 @@
 #include <stdlib.h>
 #include <windows.h>
 #include "types.h"
-#include "logger.h"
 #include "bmp.h"
 
-void bmp_UncompressData(OUT_USTRP data, int width, int height)
-{
-	int ndataLen = (height * (width * 3)) + sizeof(uint8);
-	uint32 ndataIndex = 0;
-	uint32 odataIndex = 0;
-	uint8* ndata = malloc(ndataLen);
-	uint8* odata = *data;
-	memset(ndata, 0, ndataLen);
-
-	int mx;
-	int my;
-
-	for(my = 0; my != height; my++)
-	{
-		for(mx = 0; mx != width; mx++)
-		{
-			ndata[ndataIndex++] = odata[odataIndex++];
-			ndata[ndataIndex++] = odata[odataIndex++];
-			ndata[ndataIndex] = ndata[ndataIndex - 1];
-			ndataIndex++;
-		}
-	}
-
-	free(odata);
-	*data = ndata;
-}
-
-int bmp_Create(char* fname, void* data, int width, int height, int hidden)
+void bmp_WriteHeader(FILE *f, uint32 width, uint32 height)
 {
 	BITMAP_INFO_HEADER bmpInfo = { sizeof(BITMAP_INFO_HEADER) };
 	bmpInfo.biSizeImage = width * height * 3;
@@ -42,59 +14,43 @@ int bmp_Create(char* fname, void* data, int width, int height, int hidden)
 	bmpInfo.biBitCount = 24;
 	bmpInfo.biCompression = BI_RGB;
 
-	BITMAP_FILE_HEADER bmpFile;
-	
 	int bitsOff = sizeof(BITMAP_FILE_HEADER) + bmpInfo.biSize;
-	long bmpFsize = bitsOff + bmpInfo.biSizeImage;
+	uint32 bmpFSize = bitsOff + bmpInfo.biSizeImage;
 
+	BITMAP_FILE_HEADER bmpFile;
 	bmpFile.bfType = 'B' + ('M' << 8);
 	bmpFile.bfOffBits = bitsOff;
-	bmpFile.bfSize = bmpFsize;
+	bmpFile.bfSize = bmpFSize;
 	bmpFile.bfReserved1 = 0;
 	bmpFile.bfReserved2 = 0;
 
-	if(!hidden)
-	{
-		LOG(LOG_INFO, "Creating BMP!\n");
-	}
+	fwrite(&bmpFile, 1, sizeof(BITMAP_FILE_HEADER), f);
+	fwrite(&bmpInfo, 1, sizeof(BITMAP_INFO_HEADER), f);
+}
 
-	FILE *f;
+int bmp_CreateMemBmp(OUT_USTRP mem, uint32 width, uint32 height)
+{
+	BITMAP_INFO_HEADER bmpInfo = { sizeof(BITMAP_INFO_HEADER) };
+	bmpInfo.biSizeImage = width * height * 3;
+	bmpInfo.biWidth = width;
+	bmpInfo.biHeight = height;
+	bmpInfo.biPlanes = 1;
+	bmpInfo.biBitCount = 24;
+	bmpInfo.biCompression = BI_RGB;
 
-	if(!fname)
-	{
-		f = fopen("SCSHOT_NO_NAME.bmp", "wb");
-	}else{
-		f = fopen(fname, "wb");
-	}
+	int bitsOff = sizeof(BITMAP_FILE_HEADER) + bmpInfo.biSize;
+	uint32 bmpFSize = bitsOff + bmpInfo.biSizeImage;
 
-	if(!f)
-	{
-		LOG(LOG_ERR, "Failed to create BMP!\n");
-		
-		return 0;
-	}
+	BITMAP_FILE_HEADER bmpFile;
+	bmpFile.bfType = 'B' + ('M' << 8);
+	bmpFile.bfOffBits = bitsOff;
+	bmpFile.bfSize = bmpFSize;
+	bmpFile.bfReserved1 = 0;
+	bmpFile.bfReserved2 = 0;
 
-	uint32 countBmpFile = fwrite(&bmpFile, 1, sizeof(BITMAP_FILE_HEADER), f);
-	uint32 countBmpInfo = fwrite(&bmpInfo, 1, sizeof(BITMAP_INFO_HEADER), f);
-	uint32 countData = fwrite(data, 1, bmpInfo.biSizeImage, f);
-
-	fclose(f);
-
-	if(!countBmpFile || !countBmpInfo || !countData)
-	{
-		LOG(LOG_ERR, "Failed to create BMP!\n");
-
-		return 0;
-	}
-
-	uint32 headerSize = countBmpFile + countBmpInfo;
-
-	if(!hidden)
-	{
-		LOG(LOG_INFO, "Header: %d %s\n", (headerSize / 1024) < 1 ? headerSize : headerSize / 1024, (headerSize / 1024) < 1 ? "B" : "KB");
-		LOG(LOG_INFO, "Data: %d %s\n", (countData / 1024) < 1 ? countData : countData / 1024, (countData / 1024) < 1 ? "B" : "KB");
-		LOG(LOG_SUCC, "Done!\n");
-	}
-
-	return 1;
+	*mem = malloc(bmpFSize);
+	memcpy(*mem, &bmpFile, sizeof(BITMAP_FILE_HEADER));
+	memcpy(*mem + sizeof(BITMAP_FILE_HEADER), &bmpInfo, sizeof(BITMAP_INFO_HEADER));
+	
+	return sizeof(BITMAP_FILE_HEADER) + sizeof(BITMAP_INFO_HEADER);
 }

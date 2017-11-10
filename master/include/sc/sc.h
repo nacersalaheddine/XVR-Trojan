@@ -10,7 +10,7 @@ extern void SC_LoadLibrary(void);
 extern void SC_FreeLibrary(void);
 extern int SC_Start(void);
 extern void SC_Stop(void);
-extern void SC_SetInterval(int interval);
+extern void SC_SetImage(unsigned char* data, unsigned int len);
 extern int SC_GetLastError(void);
 
 #endif

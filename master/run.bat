@@ -1,1 +1,1 @@
-bin\PROG_MASTER.exe
+bin\MASTER.exe -color -time -geoip -dwa

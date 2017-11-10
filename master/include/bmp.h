@@ -1,11 +1,14 @@
 #ifndef __BMP_H
 #define __BMP_H
 
+#include <stdio.h>
+
 #define BITMAP_INFO_HEADER BITMAPINFOHEADER
 #define BITMAP_FILE_HEADER BITMAPFILEHEADER
 
-extern int bmp_isCompressed;
-extern void bmp_UncompressData(unsigned char** data, int width, int height);
-extern int bmp_Create(char* fname, void* data, int width, int height, int hidden);
+#define BMP_GET_HEADERSIZE sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER)
+
+extern void bmp_WriteHeader(FILE *f, unsigned int width, unsigned int height);
+extern int bmp_CreateMemBmp(unsigned char** mem, unsigned int width, unsigned int height);
 
 #endif

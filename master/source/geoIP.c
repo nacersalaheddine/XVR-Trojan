@@ -68,7 +68,7 @@ int geoIP_getCountry(OUT_STRP msg, int msgLen)
 
 int geoIP_Init(void)
 {
-	uint64 gip = net_Dns_GetIp(GEOIP_IP);
+	uint32 gip = net_Dns_GetIp(GEOIP_IP);
 
 	if(!gip)
 	{

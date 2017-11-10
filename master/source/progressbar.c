@@ -5,161 +5,188 @@
 #include "logger.h"
 #include "types.h"
 
-int progressbar_ThreadAlive = 0;
-int progressbar_Running = 0;
-uint64 progressbar_Max = 0;
-uint64 progressbar_Index = 0;
+int prgs_type = PROGRESSBAR_TYPE_SIMPLE;
+int prgs_done = 0;
+int prgs_lastPercent = -1;
+int prgs_percent = 0;
+double prgs_prgs = 0;
+uint64 prgs_max = 0;
+uint64 prgs_index = 0;
 
-uint64 __stdcall progressbar_thread(void* args)
+int prgs_op_Use = 1;
+
+COORD prgs_curStatus[3]; //Start, data types, line Y, end
+HANDLE prgs_hand;
+
+/*looks ugly but its faster than"\b" & "\r" */
+
+void progressbar_printBar(void)
 {
+	if(prgs_percent < 50)
+	{
+		LOG_SetColor(LOG_COLOR_PRGS_BAR_DEFAULT);
+	}else if(prgs_percent < 80){
+		LOG_SetColor(LOG_COLOR_PRGS_BAR_HALF);
+	}else{
+		LOG_SetColor(LOG_COLOR_PRGS_BAR_FULL);
+	}
+
 	int i;
-	int printedChars = 0;
-	int percent = 0;
-	double prgs = 0;
-	char buffer[100];
-	char space = ' ';
 
-	if(!log_Color)
+	SetConsoleCursorPosition(prgs_hand, prgs_curStatus[0]);
+
+	for(i = 0; i != (int)prgs_prgs; i++)
 	{
-		space = '=';
+		putchar(log_PrgsChar);
+	}
+}
+
+void progressbar_print(void)
+{
+	if(!prgs_op_Use)
+	{
+		return;
+	}
+	
+	if(prgs_done)
+	{
+		return;
 	}
 
-	char* dataType[2] = { "B", "KB" };
-	int maxDataType = (progressbar_Max / 1024) < 1 ? 0 : 1;
-	int prgsDataType = 0;
+	progressbar_printBar();
+	
+	SetConsoleCursorPosition(prgs_hand, prgs_curStatus[1]);
 
-	uint64 maxConverted = 0;
-	uint64 prgsIndexConverted = 0;
-	uint8 color = 0x0F;
+	LOG_SetColor(LOG_COLOR_TEXT);
+	LOG_TablePrint(5, "%d%% ", prgs_percent);
 
-	progressbar_Running = 1;
-
-	putchar('\n');
-
-	while(progressbar_Running)
+	if(prgs_type == PROGRESSBAR_TYPE_FILE)
 	{
-		Sleep(PROGRESSBAR_TIMER);
+		char tp = 0;
+		double cval = (double)prgs_index;
+		double cmax = (double)prgs_max;
 
-		prgs = (double)((double)progressbar_Index / (double)progressbar_Max) * PROGRESSBAR_LEN;
-		percent = (int)(((double)progressbar_Index / (double)progressbar_Max) * 100.0);
-		maxConverted = (progressbar_Max / 1024) < 1 ? progressbar_Max : progressbar_Max / 1024;
-		prgsIndexConverted = (progressbar_Index / 1024) < 1 ? progressbar_Index : progressbar_Index / 1024;
-		prgsDataType = (progressbar_Index / 1024) < 1 ? 0 : 1;
-
-		if(log_Color)
+		if(prgs_max / (1024 * 1024 * 1024))
 		{
-			if(percent >= 90)
-			{
-				color = LOG_COLOR_PRGS_FULL;
-			}else if(percent >= 50){
-				color = LOG_COLOR_PRGS_HALF;
-			}else{
-				color = LOG_COLOR_PRGS_DEFAULT;
-			}
+			tp = 'G';
+			cval = (double)prgs_index / (1024.0 * 1024.0 * 1024.0);
+			cmax = (double)prgs_max / (1024.0 * 1024.0 * 1024.0);
+		}else if(prgs_max / (1024 * 1024)){
+			tp = 'M';
+			cval = (double)prgs_index / (1024.0 * 1024.0);
+			cmax = (double)prgs_max / (1024.0 * 1024.0);
+		}else if(prgs_max / 1024){
+			tp = 'K';
+			cval = (double)prgs_index / 1024.0;
+			cmax = (double)prgs_max / 1024.0;
 		}
-
-		if(printedChars != 0)
-		{
-			sprintf(buffer, "\r   ");
-
-			for(i = 0; i != printedChars + 1; i++)
-			{
-				sprintf(buffer, " ");
-			}
-
-			sprintf(buffer, "\r");
-			printf("%s", buffer);
-			memset(buffer, 0, 100);
-		}
-
-		if((int)prgs >= PROGRESSBAR_LEN)
-		{
-			break;
-		}
-
-		printedChars = 1;
-		printf("   |");
-
-		if(log_Color)
-		{
-			LOG_plus_SetColor(log_colorPalette[color]);
-		}
-
-		for(i = 0; i != (int)prgs; i++)
-		{
-			putchar(space);
-			printedChars++;
-		}
-
-		if(log_Color)
-		{
-			LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
-		}
-
-		for(i = 0; i != (PROGRESSBAR_LEN + 1) - printedChars; i++)
-		{
-			putchar(' ');
-		}
-
-		printedChars += printf("| %03d%% %lu %s/%lu %s", percent, prgsIndexConverted, dataType[prgsDataType], maxConverted, dataType[maxDataType]);
-		fflush(stdout);
-	}
-
-	if(progressbar_Running)
-	{
-		printf("   |");
 		
-		if(log_Color)
+		if(tp)
 		{
-			LOG_plus_SetColor(log_colorPalette[LOG_COLOR_PRGS_FULL]);
+			LOG_TablePrint(17, "%.1lf/%.1lf %cB", cval, cmax, tp);
+		}else{
+			LOG_TablePrint(17, "%.1lf/%.1lf B", cval, cmax);
 		}
-
-		for(i = 0; i != PROGRESSBAR_LEN; i++)
-		{
-			putchar(space);
-		}
-
-		if(log_Color)
-		{
-			LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
-		}
-
-		printf("| 100%% %lu %s/%lu %s\n", maxConverted, dataType[maxDataType], maxConverted, dataType[maxDataType]);
-		fflush(stdout);
-	}
-
-	progressbar_Running = 0;
-	progressbar_ThreadAlive = 0;
-	
-	return 0;
+	}	
 }
 
-void progressbar_Start(void)
+void progressbar_Update(uint64 val)
 {
-	progressbar_Index = 0;
-	progressbar_ThreadAlive = 1;
-	
-	if(!CreateThread(NULL, 0, progressbar_thread, NULL, 0, NULL))
+	if(!prgs_op_Use)
 	{
-		LOG(LOG_ERR, "Failed to create progressbar!\n");
+		return;
 	}
+
+	if(prgs_done)
+	{
+		return;
+	}
+
+	prgs_index += val;
+
+	if(prgs_index >= prgs_max)
+	{
+		progressbar_End();
+
+		return;
+	}
+
+	prgs_prgs = (double)((double)prgs_index / (double)prgs_max) * PROGRESSBAR_LEN;
+	prgs_percent = (int)(((double)prgs_index / (double)prgs_max) * 100.0);
+
+	if(prgs_percent < prgs_lastPercent)
+	{
+		prgs_percent = 0;
+	}
+
+	progressbar_print();
+	prgs_lastPercent = prgs_percent;
+	prgs_percent = 0;
 }
 
-void progressbar_WaitToStart(void)
+void progressbar_End(void)
 {
-	while(!progressbar_Running){};
+	if(!prgs_op_Use)
+	{
+		return;
+	}
+
+	if(prgs_done)
+	{
+		return;
+	}
+
+	prgs_percent = 100;
+	prgs_prgs = PROGRESSBAR_LEN;
+	prgs_index = prgs_max;
+	progressbar_print();
+	prgs_done = 1;
+
+	SetConsoleCursorPosition(prgs_hand, prgs_curStatus[2]);
+
+	LOG_NEWLINE();
 }
 
-void progressbar_Stop(void)
+void progressbar_Create(uint64 maxVal, int type)
 {
-	while(progressbar_Running){};
-	putchar('\n');
-}
+	if(!prgs_op_Use)
+	{
+		return;
+	}
 
-void progressbar_CriticalStop(void)
-{
-	progressbar_Running = 0;
+	LOG_CursorStatus(0);
 
-	while(progressbar_ThreadAlive){};
-	puts("\n");
+	prgs_done = 0;
+	prgs_lastPercent = -1;
+	prgs_percent = 0;
+	prgs_prgs = 0;
+	prgs_max = maxVal;
+	prgs_index = 0;
+	prgs_type = type;
+
+	CONSOLE_SCREEN_BUFFER_INFO coninfo;
+
+	if(!prgs_hand)
+	{
+		prgs_hand = GetStdHandle(STD_OUTPUT_HANDLE);
+	}
+	
+	GetConsoleScreenBufferInfo(prgs_hand, &coninfo);
+
+	prgs_curStatus[0].X = 3;
+	prgs_curStatus[0].Y = coninfo.dwCursorPosition.Y;
+	prgs_curStatus[1].X = 3 + 3 + (int)PROGRESSBAR_LEN;
+	prgs_curStatus[1].Y = coninfo.dwCursorPosition.Y;
+	prgs_curStatus[2].X = 3 + 3 + (int)PROGRESSBAR_LEN + 20;
+	prgs_curStatus[2].Y = coninfo.dwCursorPosition.Y;
+	
+	int i;
+	printf("  [");
+
+	for(i = 0; i != PROGRESSBAR_LEN; i++)
+	{
+		putchar(' ');
+	}
+
+	printf("] ");
 }

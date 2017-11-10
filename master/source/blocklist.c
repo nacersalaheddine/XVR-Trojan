@@ -5,6 +5,8 @@
 #include "blocklist.h"
 #include "logger.h"
 
+#define BLOCKLIST_CONFIG_FILE "block.list"
+
 int blocklist_IsInUse = 0;
 char blocklist_IpList[BLOCKLIST_MAX][BLOCKLIST_IP_MAX];
 
@@ -22,6 +24,23 @@ int blocklist_Count(void)
 	}
 
 	return count;
+}
+
+void blocklist_StoreAll(void)
+{
+	FILE *f = fopen(BLOCKLIST_CONFIG_FILE, "w");
+	
+	int i;
+
+	for(i = 0; i != BLOCKLIST_MAX; i++)
+	{
+		if(strlen(blocklist_IpList[i]))
+		{
+			fprintf(f, "%s\n", blocklist_IpList[i]);
+		}
+	}
+
+	fclose(f);
 }
 
 int blocklist_Add(char* ip)
@@ -86,6 +105,9 @@ void blocklist_Clear(void)
 			blocklist_IpList[i][y] = 0;
 		}
 	}
+
+	FILE *f = fopen(BLOCKLIST_CONFIG_FILE, "w");
+	fclose(f);
 }
 
 int blocklist_RemoveAt(int idx)
@@ -101,6 +123,8 @@ int blocklist_RemoveAt(int idx)
 	{
 		blocklist_IpList[idx][i] = 0;
 	}
+
+	blocklist_StoreAll();
 
 	return BLOCKLIST_NO_ERROR;
 }
@@ -128,7 +152,7 @@ void blocklist_PrintList(int page)
 	int y;
 
 	LOG(LOG_INFO, "Total IPs in list: %d\n", total);
-	LOG(LOG_INFO, " Num  IP\n");	
+	LOG(LOG_NONE, "  Num  IP\n");
 
 	for(i = 0; i != BLOCKLIST_MAX; i++)
 	{
@@ -144,7 +168,7 @@ void blocklist_PrintList(int page)
 				
 				int rkey = getch();
 
-				putchar('\n');
+				LOG_NEWLINE();
 
 				if(rkey == BLOCKLIST_ESCAPE_KEY)
 				{
@@ -166,14 +190,9 @@ void blocklist_PrintList(int page)
 
 			if(y > BLOCKLIST_IP_MINIMAL)
 			{
-				if(i > 99)
-				{
-					LOG(LOG_INFO, " %d  %s\n", i, ip);
-				}else if(i > 9){
-					LOG(LOG_INFO, "  %d  %s\n", i, ip);
-				}else{
-					LOG(LOG_INFO, "   %d  %s\n", i, ip);
-				}
+				LOG(LOG_NONE, "  ");
+				LOG_TablePrint(3, "%0d", ip);
+				printf("  %s\n", ip);
 			}
 		}
 	}
@@ -221,20 +240,28 @@ int blocklist_IsBlocked(char* cip)
 
 void blocklist_Init(void)
 {
-	blocklist_Clear();
+	int i;
+	int y;
 
-	LOG(LOG_INFO, "Searching for \"blocklist\"\n");
+	for(i = 0; i != BLOCKLIST_MAX; i++)
+	{
+		for(y = 0; y != BLOCKLIST_IP_MAX; y++)
+		{
+			blocklist_IpList[i][y] = 0;
+		}
+	}
 
-	FILE *f = fopen("blocklist", "r");
+	LOG(LOG_INFO, "Searching for \"%s\"\n", BLOCKLIST_CONFIG_FILE);
+
+	FILE *f = fopen(BLOCKLIST_CONFIG_FILE, "r");
 
 	if(!f)
 	{
-		LOG(LOG_ERR, "Not found!\n");
+		LOG(LOG_TABLE, "Not found!\n");
 
 		return;
 	}
 
-	int i;
 	int addedCount = 0;
 	int errorCount = 0;
 	char str[256];
@@ -266,6 +293,6 @@ void blocklist_Init(void)
 
 	fclose(f);
 
-	LOG(LOG_INFO, "IPs added: %d\n", addedCount);
-	LOG(LOG_INFO, "IPs that have error: %d\n", errorCount);
+	LOG(LOG_TABLE, "IPs added: %d\n", addedCount);
+	LOG(LOG_TABLE, "IPs that have error: %d\n", errorCount);
 }

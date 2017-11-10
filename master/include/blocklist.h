@@ -22,5 +22,6 @@ extern int blocklist_RemoveAt(int idx);
 extern void blocklist_PrintList(int page);
 extern int blocklist_IsBlocked(char* cip);
 extern void blocklist_Clear(void);
+extern void blocklist_StoreAll(void);
 
 #endif

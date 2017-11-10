@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+#include "types.h"
 #include "logger.h"
 #include "sc/sc.h"
 #include "sc/error.h"
@@ -10,7 +11,8 @@ int SC_CanRun = 0;
 HMODULE sc_dll;
 int(*_SC_Lib_Start)(void);
 void(*_SC_Lib_Stop)(void);
-void(*_SC_Lib_SetInterval)(int);
+void(*_SC_Lib_SetImage)(unsigned char*, unsigned int);
+int(*_SC_Lib_IsImageUpdate)(void);
 int(*_SC_Lib_GetLastError)(void);
 
 int SC_Start(void)
@@ -33,14 +35,14 @@ void SC_Stop(void)
 	_SC_Lib_Stop();
 }
 
-void SC_SetInterval(int interval)
+void SC_SetImage(uint8* data, uint32 len)
 {
 	if(!sc_dll)
 	{
 		return;
 	}
 
-	_SC_Lib_SetInterval(interval);
+	_SC_Lib_SetImage(data, len);
 }
 
 int SC_GetLastError(void)
@@ -55,28 +57,28 @@ int SC_GetLastError(void)
 
 int SC_loadFunctions(void)
 {
-	_SC_Lib_Start = GetProcAddress(sc_dll, "SC_Start");
+	_SC_Lib_Start = (void*)GetProcAddress(sc_dll, "SC_Start");
 
 	if(!_SC_Lib_Start)
 	{
 		return 0;
 	}
 
-	_SC_Lib_Stop = GetProcAddress(sc_dll, "SC_Stop");
+	_SC_Lib_Stop = (void*)GetProcAddress(sc_dll, "SC_Stop");
 
 	if(!_SC_Lib_Stop)
 	{
 		return 0;
 	}
 
-	_SC_Lib_SetInterval = GetProcAddress(sc_dll, "SC_SetInterval");
+	_SC_Lib_SetImage = (void*)GetProcAddress(sc_dll, "SC_SetImage");
 
-	if(!_SC_Lib_SetInterval)
+	if(!_SC_Lib_SetImage)
 	{
 		return 0;
 	}
 
-	_SC_Lib_GetLastError = GetProcAddress(sc_dll, "SC_GetLoopLastError");
+	_SC_Lib_GetLastError = (void*)GetProcAddress(sc_dll, "SC_GetLoopLastError");
 
 	if(!_SC_Lib_GetLastError)
 	{
@@ -112,10 +114,8 @@ void SC_LoadLibrary(void)
 
 	if(!f)
 	{
-		LOG(LOG_ERR, "Not found!\n");
-		LOG(LOG_INFO, "The command \"screen cap\" will display images from the browser\n");
-		LOG(LOG_INFO, "Download their binary (%s) from their website \"%s\"\n", SC_LIB_SDL2, SC_LIB_SDL2_WEBLINK);
-
+		LOG(LOG_WAR, "Didn't found \"%s\"\n", SC_LIB_SDL2);
+		LOG(LOG_TABLE, "Download their binary (%s) from their website \"%s\"\n", SC_LIB_SDL2, SC_LIB_SDL2_WEBLINK);
 		return;
 	}
 
@@ -127,8 +127,7 @@ void SC_LoadLibrary(void)
 
 	if(!f)
 	{
-		LOG(LOG_ERR, "Not found!\n");
-		LOG(LOG_INFO, "The command \"screen cap\" will display images from the browser\n");
+		LOG(LOG_WAR, "Didn't found \"%s\"\n", SC_LIB_XVR_SC);
 
 		return;
 	}
