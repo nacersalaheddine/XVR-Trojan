@@ -1,4 +1,4 @@
-# XVR-Trojan
+# XVR-Trojan 5.2
  - Still under development, You can do what you wan't with the code
  - Made it more customizable and protected
  - There may be some bugs that need fixing so you known!
